@@ -12,6 +12,12 @@ socket.on("connect", () => {
 socket.on("disconnect", () => {
   appState.connected = false;
   console.log("Odspojeno sa servera");
+  // If we were in room/game and lost connection, go back to login
+  if (appState.screen !== 'login') {
+    appState.screen = 'login';
+    appState.currentRoom = null;
+    appState.gameState = null;
+  }
 });
 
 socket.on("welcome", (data) => {

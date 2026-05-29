@@ -38,6 +38,14 @@ const players = new Map(); // socketId -> { id, nickname, avatarId, roomId }
 const rooms = new Map(); // roomId -> room object
 let nextRoomId = 1;
 
+// Prevent server crash on unhandled errors
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT ERROR:", err);
+});
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:", err);
+});
+
 // ---------- Helpers ----------
 
 function generateRoomId() {
@@ -394,7 +402,7 @@ io.on("connection", (socket) => {
       name: cleanName,
       hostId: socket.id,
       settings: {
-        targetScore: settings?.targetScore === 701 ? 701 : 1001,
+        targetScore: [501, 701, 1001].includes(settings?.targetScore) ? settings.targetScore : 1001,
         prolaz: settings?.prolaz !== false,
       },
       players: [
