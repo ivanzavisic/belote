@@ -93,9 +93,15 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse at 30% 20%, rgba(140,90,30,0.2) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 80%, rgba(140,90,30,0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at center, #2b221a 0%, #1c1612 100%);
+      radial-gradient(ellipse at 20% 30%, rgba(201,168,76,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(220,53,69,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(201,168,76,0.04) 0%, transparent 70%),
+      linear-gradient(180deg, #0a0a0e 0%, #141416 100%);
+    animation: bg-breathe 8s ease-in-out infinite;
+  }
+  @keyframes bg-breathe {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.08); }
   }
 
   .login-content {
@@ -113,24 +119,30 @@
 
   .logo {
     font-family: var(--font-display);
-    font-size: 6rem;
-    font-weight: 900;
-    letter-spacing: 12px;
+    font-size: 5rem;
+    font-weight: 700;
+    letter-spacing: 16px;
     margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent-bright) 0%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 20px rgba(201,168,76,0.3));
   }
 
   .subtitle {
     font-family: var(--font-heading);
-    font-size: 1.15rem;
-    color: var(--gold);
-    letter-spacing: 4px;
+    font-size: 1rem;
+    color: var(--text-dim);
+    letter-spacing: 5px;
     text-transform: uppercase;
+    font-weight: 500;
   }
 
   .decorative-line {
     width: 200px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
     margin: 16px auto 0;
   }
 
@@ -146,11 +158,12 @@
   .form-group label {
     display: block;
     font-family: var(--font-heading);
-    font-size: 0.95rem;
-    color: var(--gold);
+    font-size: 0.8rem;
+    color: var(--accent-bright);
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 8px;
+    font-weight: 600;
   }
 
   .hint {
@@ -172,22 +185,23 @@
     align-items: center;
     gap: 4px;
     padding: 10px 4px;
-    border: 2px solid transparent;
-    background: rgba(0,0,0,0.4);
+    border: 1px solid transparent;
+    background: rgba(201,168,76,0.05);
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
     color: var(--cream);
   }
 
   .avatar-option:hover {
-    border-color: var(--gold-dark);
-    background: rgba(212,165,116,0.1);
+    border-color: rgba(201,168,76,0.3);
+    background: rgba(201,168,76,0.1);
   }
 
   .avatar-option.selected {
-    border-color: var(--gold-bright);
-    background: rgba(212,165,116,0.15);
-    box-shadow: 0 0 15px var(--shadow-gold);
+    border-color: var(--accent);
+    background: rgba(201,168,76,0.15);
+    box-shadow: 0 0 16px var(--shadow-accent);
   }
 
   .avatar-emoji {
@@ -217,11 +231,10 @@
 
   .footer-text {
     margin-top: 24px;
-    font-family: var(--font-heading);
-    font-size: 0.8rem;
-    color: var(--gold-dark);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: var(--text-dim);
     letter-spacing: 3px;
-    font-style: italic;
   }
 
   .shake {

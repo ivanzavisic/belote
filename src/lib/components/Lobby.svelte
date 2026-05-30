@@ -92,9 +92,14 @@
     display: flex;
     flex-direction: column;
     background:
-      radial-gradient(ellipse at 20% 50%, rgba(140,90,30,0.1) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 50%, rgba(140,90,30,0.06) 0%, transparent 50%),
-      var(--bg-darkest);
+      radial-gradient(ellipse at 15% 50%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 30%, rgba(220,53,69,0.04) 0%, transparent 50%),
+      linear-gradient(180deg, #0a0a0e 0%, #141416 50%, #0a0a0e 100%);
+    animation: lobby-bg-shift 12s ease-in-out infinite;
+  }
+  @keyframes lobby-bg-shift {
+    0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+    50% { filter: brightness(1.04) hue-rotate(3deg); }
   }
 
   .lobby-header {
@@ -102,14 +107,15 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 24px;
-    border-bottom: 2px solid var(--gold-dark);
+    border-bottom: 1px solid rgba(201,168,76,0.15);
     flex-shrink: 0;
   }
 
   .lobby-title {
     font-family: var(--font-display);
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     letter-spacing: 6px;
+    font-weight: 700;
   }
 
   .online-indicator {
@@ -143,13 +149,13 @@
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    border: 2px solid var(--gold-dark);
+    border: 2px solid rgba(201,168,76,0.3);
   }
 
   .user-name {
     font-family: var(--font-heading);
-    font-weight: 700;
-    color: var(--gold);
+    font-weight: 600;
+    color: var(--accent-bright);
     letter-spacing: 1px;
   }
 
@@ -173,9 +179,10 @@
 
   .section-header h2 {
     font-family: var(--font-heading);
-    font-size: 1.4rem;
-    color: var(--gold);
+    font-size: 1.3rem;
+    color: var(--accent-bright);
     letter-spacing: 2px;
+    font-weight: 600;
   }
 
   .rooms-list {
@@ -193,7 +200,7 @@
   }
 
   .room-card:hover {
-    border-color: var(--gold);
+    border-color: var(--accent);
   }
 
   .room-name {
@@ -228,6 +235,6 @@
   .empty-hint {
     font-size: 0.85rem;
     margin-top: 8px;
-    color: var(--gold-dark);
+    color: var(--text-dim);
   }
 </style>

@@ -31,7 +31,7 @@ const AVATARS = [
   { id: 0, emoji: "🎰", label: "Casino Boss", bg: "#d4a574" },
   { id: 1, emoji: "🃏", label: "Kartaš", bg: "#cc3333" },
   { id: 2, emoji: "🎲", label: "Sretković", bg: "#33aa33" },
-  { id: 3, emoji: "👑", label: "Kralj", bg: "#9944cc" },
+  { id: 3, emoji: "👑", label: "Kralj", bg: "#c9a84c" },
   { id: 4, emoji: "⭐", label: "Zvijezda", bg: "#ccaa00" },
   { id: 5, emoji: "🔥", label: "Vatreni", bg: "#dd6600" },
   { id: 6, emoji: "💎", label: "Dijamant", bg: "#3366cc" },

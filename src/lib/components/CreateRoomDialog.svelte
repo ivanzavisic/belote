@@ -77,11 +77,12 @@
   .form-group > label:first-child {
     display: block;
     font-family: var(--font-heading);
-    font-size: 0.85rem;
-    color: var(--gold);
+    font-size: 0.8rem;
+    color: var(--accent-bright);
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 8px;
+    font-weight: 600;
   }
 
   .modal-actions {

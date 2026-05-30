@@ -53,22 +53,24 @@
             {@const posClass = ['seat-bottom', 'seat-right', 'seat-top', 'seat-left'][seatIndex]}
             <div class="seat {posClass}" class:occupied={player} class:team-a={seatIndex % 2 === 0} class:team-b={seatIndex % 2 !== 0}>
               {#if player}
-                <div class="player-card">
-                  <span class="player-avatar" style="background: {getAvatar(player.avatarId).bg}">
-                    {player.isBot ? '🤖' : getAvatar(player.avatarId).emoji}
-                  </span>
-                  <span class="player-name" class:is-bot={player.isBot}>
-                    {player.nickname}
-                  </span>
+                <div class="player-circle-wrap">
+                  <div class="player-circle">
+                    <span class="circle-avatar" style="background: {getAvatar(player.avatarId).bg}">
+                      {player.isBot ? '🤖' : getAvatar(player.avatarId).emoji}
+                    </span>
+                    {#if isHost && player.isBot}
+                      <button class="remove-btn" onclick={() => removePlayer(seatIndex)} title="Ukloni">✕</button>
+                    {/if}
+                  </div>
+                  <span class="circle-name">{player.nickname}</span>
                   <span class="team-badge">Tim {getTeamLabel(seatIndex)}</span>
-                  {#if isHost && player.isBot}
-                    <button class="remove-btn" onclick={() => removePlayer(seatIndex)} title="Ukloni">✕</button>
-                  {/if}
                 </div>
               {:else}
-                <div class="empty-seat">
-                  <span class="seat-label">{seatLabels[seatIndex]}</span>
-                  <span class="seat-empty">Prazno</span>
+                <div class="player-circle-wrap empty">
+                  <div class="player-circle empty-circle">
+                    <span class="empty-icon">?</span>
+                  </div>
+                  <span class="circle-name dim">{seatLabels[seatIndex]}</span>
                   {#if isHost}
                     <button class="btn btn-small btn-green" onclick={addBot}>
                       + Bot
@@ -106,8 +108,9 @@
     display: flex;
     flex-direction: column;
     background:
-      radial-gradient(ellipse at center, rgba(13,74,13,0.15) 0%, transparent 70%),
-      #1c1612;
+      radial-gradient(ellipse at center, rgba(201,168,76,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse at 30% 70%, rgba(220,53,69,0.03) 0%, transparent 50%),
+      linear-gradient(180deg, #0a0a0e 0%, #141416 100%);
   }
 
   .room-header {
@@ -115,7 +118,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 24px;
-    border-bottom: 2px solid var(--gold-dark);
+    border-bottom: 1px solid rgba(201,168,76,0.15);
     flex-shrink: 0;
   }
 
@@ -126,8 +129,9 @@
   .room-name {
     font-family: var(--font-heading);
     font-size: 1.2rem;
-    color: var(--gold);
+    color: var(--accent-bright);
     letter-spacing: 2px;
+    font-weight: 600;
   }
 
   .room-settings-info {
@@ -161,18 +165,18 @@
   .table-felt {
     width: 100%;
     aspect-ratio: 2.2 / 1;
-    background: radial-gradient(ellipse at center, #1a6b1a 0%, #0d4a0d 60%, #093509 100%);
+    background: radial-gradient(ellipse at center, #1c1c22 0%, #131316 60%, #0d0d12 100%);
     border-radius: 40%;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 4px solid #c8a84e;
+    border: 2px solid rgba(201,168,76,0.3);
     box-shadow:
-      0 0 0 10px #3d1a00,
-      0 0 0 14px #c8a84e,
+      0 0 0 8px rgba(12,12,16,0.8),
+      0 0 0 10px rgba(201,168,76,0.15),
       0 0 40px rgba(0,0,0,0.5),
-      inset 0 0 60px rgba(0,0,0,0.3);
+      inset 0 0 60px rgba(0,0,0,0.2);
   }
 
   .table-center {
@@ -203,111 +207,119 @@
   .seat-left { left: -40px; top: 50%; transform: translateY(-50%); }
   .seat-right { right: -40px; top: 50%; transform: translateY(-50%); }
 
-  .player-card {
+  .player-circle-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 10px;
-    background: rgba(0,0,0,0.7);
-    border: 1px solid var(--gold-dark);
-    position: relative;
+    gap: 5px;
   }
-
-  .player-avatar {
-    width: 44px;
-    height: 44px;
+  .player-circle {
+    position: relative;
+    width: 79px;
+    height: 79px;
+    border-radius: 50%;
+    border: 2px solid rgba(201,168,76,0.35);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .player-circle:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 14px rgba(201,168,76,0.25);
+  }
+  .circle-avatar {
+    position: absolute;
+    inset: 2px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
-    border: 2px solid var(--gold-dark);
+    font-size: 1.8rem;
   }
-
-  .player-name {
+  .circle-name {
     font-family: var(--font-heading);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--cream);
-    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    background: rgba(12,12,16,0.85);
+    padding: 2px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(201,168,76,0.2);
+    font-weight: 500;
   }
-
-  .player-name.is-bot {
+  .circle-name.dim {
     color: var(--text-dim);
   }
 
   .team-badge {
-    font-size: 0.65rem;
-    padding: 1px 6px;
-    border-radius: 2px;
-    font-weight: 700;
+    font-size: 0.6rem;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-weight: 600;
     letter-spacing: 1px;
   }
 
   .team-a .team-badge {
-    background: rgba(255,45,45,0.3);
+    background: rgba(255,71,87,0.15);
     color: var(--neon-red);
-    border: 1px solid var(--neon-red);
+    border: 1px solid rgba(255,71,87,0.3);
   }
 
   .team-b .team-badge {
-    background: rgba(57,255,20,0.2);
-    color: var(--neon-green);
-    border: 1px solid var(--neon-green);
+    background: rgba(156,163,175,0.15);
+    color: var(--cyan);
+    border: 1px solid rgba(156,163,175,0.3);
   }
 
   .remove-btn {
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: -4px;
+    right: -4px;
     width: 20px;
     height: 20px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255,0,0,0.3);
+    background: rgba(255,71,87,0.3);
     border: 1px solid var(--neon-red);
     color: var(--neon-red);
     cursor: pointer;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
+    z-index: 5;
+    backdrop-filter: blur(4px);
   }
 
   .remove-btn:hover {
-    background: rgba(255,0,0,0.5);
+    background: rgba(255,71,87,0.5);
   }
 
-  .empty-seat {
+  .empty-circle {
+    border-style: dashed;
+    border-color: rgba(201,168,76,0.25);
+    animation: waiting-pulse 2.5s ease-in-out infinite;
+  }
+  .empty-icon {
+    position: absolute;
+    inset: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 12px;
-    background: rgba(0,0,0,0.5);
-    border: 2px solid rgba(255,215,0,0.3);
-    animation: waiting-pulse 2s ease-in-out infinite;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: var(--text-dim);
+    font-weight: 700;
+    font-family: var(--font-heading);
   }
 
   @keyframes waiting-pulse {
     0%, 100% {
-      border-color: rgba(255,215,0,0.2);
-      box-shadow: 0 0 0 0 rgba(255,215,0,0);
+      border-color: rgba(201,168,76,0.15);
+      box-shadow: 0 0 0 0 rgba(201,168,76,0);
     }
     50% {
-      border-color: rgba(255,215,0,0.6);
-      box-shadow: 0 0 12px 2px rgba(255,215,0,0.15);
+      border-color: rgba(201,168,76,0.4);
+      box-shadow: 0 0 16px 2px rgba(201,168,76,0.1);
     }
-  }
-
-  .seat-label {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .seat-empty {
-    font-size: 0.8rem;
-    color: var(--gold-dark);
   }
 
   .host-controls {
@@ -322,7 +334,7 @@
   }
 
   .waiting-text {
-    color: var(--gold);
+    color: var(--accent-bright);
     font-family: var(--font-heading);
     letter-spacing: 2px;
   }
