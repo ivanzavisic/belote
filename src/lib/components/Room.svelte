@@ -106,8 +106,8 @@
     display: flex;
     flex-direction: column;
     background:
-      radial-gradient(ellipse at center, rgba(13,74,13,0.2) 0%, transparent 70%),
-      var(--bg-darkest);
+      radial-gradient(ellipse at center, rgba(13,74,13,0.15) 0%, transparent 70%),
+      #1c1612;
   }
 
   .room-header {

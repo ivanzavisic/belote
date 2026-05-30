@@ -402,7 +402,9 @@ io.on("connection", (socket) => {
       name: cleanName,
       hostId: socket.id,
       settings: {
-        targetScore: [501, 701, 1001].includes(settings?.targetScore) ? settings.targetScore : 1001,
+        targetScore: [501, 701, 1001].includes(settings?.targetScore)
+          ? settings.targetScore
+          : 1001,
         prolaz: settings?.prolaz !== false,
       },
       players: [
@@ -495,7 +497,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("removePlayer", (index) => {
-    if (typeof index !== 'number' || !Number.isInteger(index)) return;
+    if (typeof index !== "number" || !Number.isInteger(index)) return;
     const player = players.get(socket.id);
     if (!player || !player.roomId) return;
 
@@ -581,7 +583,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("playCard", (card) => {
-    if (!card || typeof card.suit !== 'string' || typeof card.value !== 'string') return;
+    if (
+      !card ||
+      typeof card.suit !== "string" ||
+      typeof card.value !== "string"
+    )
+      return;
     const player = players.get(socket.id);
     if (!player || !player.roomId) return;
 

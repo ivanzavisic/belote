@@ -93,9 +93,9 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse at 30% 20%, rgba(139,0,0,0.3) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 80%, rgba(139,0,0,0.2) 0%, transparent 50%),
-      radial-gradient(ellipse at center, #1a0f0f 0%, #0a0a0a 100%);
+      radial-gradient(ellipse at 30% 20%, rgba(140,90,30,0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 80%, rgba(140,90,30,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at center, #2b221a 0%, #1c1612 100%);
   }
 
   .login-content {
@@ -121,7 +121,7 @@
 
   .subtitle {
     font-family: var(--font-heading);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     color: var(--gold);
     letter-spacing: 4px;
     text-transform: uppercase;
@@ -146,7 +146,7 @@
   .form-group label {
     display: block;
     font-family: var(--font-heading);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--gold);
     text-transform: uppercase;
     letter-spacing: 2px;

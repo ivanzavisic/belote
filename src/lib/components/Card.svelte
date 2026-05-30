@@ -14,12 +14,9 @@
 {:else if card}
   <button
     class="card"
-    class:playable
     class:small
     class:medium
-    class:not-playable={!playable && onclick}
-    onclick={() => playable && onclick ? onclick() : null}
-    disabled={!playable}
+    onclick={() => onclick ? onclick() : null}
   >
     <img src={cardImage(card)} alt="{card.suit} {card.value}" draggable="false" />
   </button>
@@ -27,12 +24,12 @@
 
 <style>
   .card {
-    width: 90px;
-    height: 145px;
+    width: 109px;
+    height: 176px;
     border: none;
     padding: 0;
     background: none;
-    cursor: default;
+    cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
     position: relative;
     flex-shrink: 0;
@@ -44,27 +41,18 @@
     object-fit: contain;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    filter: contrast(1.1) saturate(1.25) brightness(0.92) sepia(0.06);
+    filter: brightness(0.78)contrast(1.7)saturate(3);
   }
 
-  .card.playable {
-    cursor: pointer;
-  }
-
-  .card.playable:hover {
+  .card:hover {
     transform: translateY(-12px);
     z-index: 10;
   }
 
-  .card.playable:hover img {
+  .card:hover img {
     box-shadow:
       0 4px 16px rgba(0,0,0,0.6),
       0 0 15px rgba(255,215,0,0.4);
-  }
-
-  .card.not-playable {
-    filter: brightness(0.5);
-    cursor: not-allowed;
   }
 
   .card.small {
@@ -73,13 +61,13 @@
   }
 
   .card.medium {
-    width: 75px;
-    height: 121px;
+    width: 91px;
+    height: 146px;
   }
 
   .card-back {
-    width: 90px;
-    height: 145px;
+    width: 109px;
+    height: 176px;
   }
 
   .card-back.small {
@@ -88,8 +76,8 @@
   }
 
   .card-back.medium {
-    width: 75px;
-    height: 121px;
+    width: 91px;
+    height: 146px;
   }
 
   .card-back img {

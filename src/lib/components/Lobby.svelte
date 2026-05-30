@@ -92,8 +92,8 @@
     display: flex;
     flex-direction: column;
     background:
-      radial-gradient(ellipse at 20% 50%, rgba(139,0,0,0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 50%, rgba(139,0,0,0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 50%, rgba(140,90,30,0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 50%, rgba(140,90,30,0.06) 0%, transparent 50%),
       var(--bg-darkest);
   }
 
@@ -117,7 +117,7 @@
     align-items: center;
     gap: 8px;
     color: var(--cream);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
 
   .online-dot {

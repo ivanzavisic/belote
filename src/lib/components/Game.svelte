@@ -17,6 +17,7 @@
   let prevPhase = $state('');
   let turnTimer = $state(15);
   let _timerInterval = null;
+  let invalidCardMsg = $state('');
 
   function getAvatar(id) {
     return AVATARS[id] || AVATARS[0];
@@ -210,7 +211,7 @@
     const bubble = { text: action.text, cards: action.cards || null, key };
     actionBubbles = { ...actionBubbles, [visualPos]: bubble };
 
-    const duration = action.type === 'zvanja-show' ? 3500 : 2000;
+    const duration = action.type === 'zvanja-show' ? 4500 : 2000;
     setTimeout(() => {
       actionBubbles = Object.fromEntries(
         Object.entries(actionBubbles).filter(([_, b]) => b.key !== key)
@@ -255,7 +256,7 @@
   });
 
   // Visual position of the current active player
-  let activeVisualPos = $derived(gs ? (gs.currentPlayerIndex - gs.myIndex + 4) % 4 : -1);
+
 
   // Your turn chime
   $effect(() => {
@@ -366,24 +367,31 @@
           <!-- Top player (partner, visual pos 2) -->
           {#if seatedPlayers[2]}
             {@const p = seatedPlayers[2]}
+            {@const isActive2 = gs.currentPlayerIndex === p.actualIdx && (isPlaying || isBidding || isDeclaringZvanja)}
             <div class="seat seat-top">
               <div class="seat-cards-row">
                 {#each Array(p.cardCount) as _}
                   <Card faceDown={true} small={true} />
                 {/each}
               </div>
-              <div class="player-info-compact" class:is-active={gs.currentPlayerIndex === p.actualIdx}>
-                <span class="pi-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
-                  {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
-                </span>
-                <span class="pi-name">{p.player.nickname}</span>
-                {#if activeVisualPos === 2 && (isPlaying || isBidding || isDeclaringZvanja)}
-                  <span class="turn-timer" class:timer-low={turnTimer <= 5}>{turnTimer}</span>
-                {/if}
+              <div class="player-circle-wrap">
+                <div class="player-circle" class:is-active={isActive2}>
+                  {#if isActive2}
+                    <svg class="timer-ring" viewBox="0 0 100 100">
+                      <circle class="timer-ring-bg" cx="50" cy="50" r="46" />
+                      <circle class="timer-ring-progress" class:timer-low={turnTimer <= 5} cx="50" cy="50" r="46"
+                        style="stroke-dashoffset: {289.03 - (turnTimer / 15) * 289.03}" />
+                    </svg>
+                  {/if}
+                  <span class="circle-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
+                    {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
+                  </span>
+                  {#if gs.dealerIndex === p.actualIdx}
+                    <span class="dealer-badge">D</span>
+                  {/if}
+                </div>
+                <span class="circle-name">{p.player.nickname}</span>
               </div>
-              {#if gs.dealerIndex === p.actualIdx}
-                <span class="dealer-chip-table dealer-below">D</span>
-              {/if}
               {#if actionBubbles[2]}
                 <div class="action-bubble bubble-below animate-bubble-down" key={actionBubbles[2].key}>
                   <span class="bubble-text">{actionBubbles[2].text}</span>
@@ -404,26 +412,33 @@
           <!-- Left player (visual pos 3) -->
           {#if seatedPlayers[3]}
             {@const p = seatedPlayers[3]}
+            {@const isActive3 = gs.currentPlayerIndex === p.actualIdx && (isPlaying || isBidding || isDeclaringZvanja)}
             <div class="seat seat-left">
               <div class="seat-cards-row">
                 {#each Array(p.cardCount) as _}
                   <Card faceDown={true} small={true} />
                 {/each}
               </div>
-              <div class="player-info-compact" class:is-active={gs.currentPlayerIndex === p.actualIdx}>
-                <span class="pi-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
-                  {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
-                </span>
-                <span class="pi-name">{p.player.nickname}</span>
-                {#if activeVisualPos === 3 && (isPlaying || isBidding || isDeclaringZvanja)}
-                  <span class="turn-timer" class:timer-low={turnTimer <= 5}>{turnTimer}</span>
-                {/if}
+              <div class="player-circle-wrap">
+                <div class="player-circle" class:is-active={isActive3}>
+                  {#if isActive3}
+                    <svg class="timer-ring" viewBox="0 0 100 100">
+                      <circle class="timer-ring-bg" cx="50" cy="50" r="46" />
+                      <circle class="timer-ring-progress" class:timer-low={turnTimer <= 5} cx="50" cy="50" r="46"
+                        style="stroke-dashoffset: {289.03 - (turnTimer / 15) * 289.03}" />
+                    </svg>
+                  {/if}
+                  <span class="circle-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
+                    {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
+                  </span>
+                  {#if gs.dealerIndex === p.actualIdx}
+                    <span class="dealer-badge">D</span>
+                  {/if}
+                </div>
+                <span class="circle-name">{p.player.nickname}</span>
               </div>
-              {#if gs.dealerIndex === p.actualIdx}
-                <span class="dealer-chip-table dealer-below">D</span>
-              {/if}
               {#if actionBubbles[3]}
-                <div class="action-bubble bubble-up animate-bubble-up" key={actionBubbles[3].key}>
+                <div class="action-bubble bubble-right animate-bubble-right" key={actionBubbles[3].key}>
                   <span class="bubble-text">{actionBubbles[3].text}</span>
                   {#if actionBubbles[3].cards}
                     <div class="bubble-cards">
@@ -442,26 +457,33 @@
           <!-- Right player (visual pos 1) -->
           {#if seatedPlayers[1]}
             {@const p = seatedPlayers[1]}
+            {@const isActive1 = gs.currentPlayerIndex === p.actualIdx && (isPlaying || isBidding || isDeclaringZvanja)}
             <div class="seat seat-right">
               <div class="seat-cards-row">
                 {#each Array(p.cardCount) as _}
                   <Card faceDown={true} small={true} />
                 {/each}
               </div>
-              <div class="player-info-compact" class:is-active={gs.currentPlayerIndex === p.actualIdx}>
-                <span class="pi-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
-                  {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
-                </span>
-                <span class="pi-name">{p.player.nickname}</span>
-                {#if activeVisualPos === 1 && (isPlaying || isBidding || isDeclaringZvanja)}
-                  <span class="turn-timer" class:timer-low={turnTimer <= 5}>{turnTimer}</span>
-                {/if}
+              <div class="player-circle-wrap">
+                <div class="player-circle" class:is-active={isActive1}>
+                  {#if isActive1}
+                    <svg class="timer-ring" viewBox="0 0 100 100">
+                      <circle class="timer-ring-bg" cx="50" cy="50" r="46" />
+                      <circle class="timer-ring-progress" class:timer-low={turnTimer <= 5} cx="50" cy="50" r="46"
+                        style="stroke-dashoffset: {289.03 - (turnTimer / 15) * 289.03}" />
+                    </svg>
+                  {/if}
+                  <span class="circle-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
+                    {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
+                  </span>
+                  {#if gs.dealerIndex === p.actualIdx}
+                    <span class="dealer-badge">D</span>
+                  {/if}
+                </div>
+                <span class="circle-name">{p.player.nickname}</span>
               </div>
-              {#if gs.dealerIndex === p.actualIdx}
-                <span class="dealer-chip-table dealer-below">D</span>
-              {/if}
               {#if actionBubbles[1]}
-                <div class="action-bubble bubble-up animate-bubble-up" key={actionBubbles[1].key}>
+                <div class="action-bubble bubble-left animate-bubble-left" key={actionBubbles[1].key}>
                   <span class="bubble-text">{actionBubbles[1].text}</span>
                   {#if actionBubbles[1].cards}
                     <div class="bubble-cards">
@@ -479,21 +501,24 @@
 
           <!-- Bottom seat (me) -->
           <div class="seat seat-bottom">
-            <div class="player-info-compact" class:is-active={isMyTurn && (isPlaying || isBidding || isDeclaringZvanja)}>
-              <span class="pi-avatar" style="background: {getAvatar(appState.user.avatarId).bg}">
-                {getAvatar(appState.user.avatarId).emoji}
-              </span>
-              <span class="pi-name">{appState.user.nickname}</span>
-              {#if activeVisualPos === 0 && (isPlaying || isBidding || isDeclaringZvanja)}
-                <span class="turn-timer" class:timer-low={turnTimer <= 5}>{turnTimer}</span>
-              {/if}
-              {#if isMyTurn && isPlaying}
-                <span class="turn-indicator">TVOJ RED!</span>
-              {/if}
+            <div class="player-circle-wrap">
+              <div class="player-circle" class:is-active={isMyTurn && (isPlaying || isBidding || isDeclaringZvanja)}>
+                {#if isMyTurn && (isPlaying || isBidding || isDeclaringZvanja)}
+                  <svg class="timer-ring" viewBox="0 0 100 100">
+                    <circle class="timer-ring-bg" cx="50" cy="50" r="46" />
+                    <circle class="timer-ring-progress" class:timer-low={turnTimer <= 5} cx="50" cy="50" r="46"
+                      style="stroke-dashoffset: {289.03 - (turnTimer / 15) * 289.03}" />
+                  </svg>
+                {/if}
+                <span class="circle-avatar" style="background: {getAvatar(appState.user.avatarId).bg}">
+                  {getAvatar(appState.user.avatarId).emoji}
+                </span>
+                {#if gs.dealerIndex === gs.myIndex}
+                  <span class="dealer-badge">D</span>
+                {/if}
+              </div>
+              <span class="circle-name">{appState.user.nickname}</span>
             </div>
-            {#if gs.dealerIndex === gs.myIndex}
-              <span class="dealer-chip-table dealer-above">D</span>
-            {/if}
             {#if actionBubbles[0]}
               <div class="action-bubble bubble-bottom animate-bubble" key={actionBubbles[0].key}>
                 <span class="bubble-text">{actionBubbles[0].text}</span>
@@ -600,12 +625,17 @@
               <div class="hand-card-wrap" class:zvanja-highlight={selected}>
                 <Card
                   {card}
-                  playable={(isPlaying && isMyTurn && isCardValid(card)) || (isDeclaringZvanja && isMyDeclaringTurn)}
+                  playable={true}
                   onclick={() => {
                     if (isDeclaringZvanja && isMyDeclaringTurn) {
                       toggleCardSelection(card);
-                    } else {
-                      handlePlayCard(card);
+                    } else if (isPlaying && isMyTurn) {
+                      if (isCardValid(card)) {
+                        handlePlayCard(card);
+                      } else {
+                        invalidCardMsg = 'Ne možeš baciti tu kartu!';
+                        setTimeout(() => invalidCardMsg = '', 2000);
+                      }
                     }
                   }}
                 />
@@ -613,6 +643,9 @@
             {/each}
           {/if}
         </div>
+        {#if invalidCardMsg}
+          <div class="invalid-card-toast">{invalidCardMsg}</div>
+        {/if}
       </div>
     </main>
 
@@ -642,8 +675,8 @@
     display: flex;
     flex-direction: column;
     background:
-      radial-gradient(ellipse at center, rgba(13,74,13,0.15) 0%, transparent 70%),
-      var(--bg-darkest);
+      radial-gradient(ellipse at center, rgba(13,74,13,0.1) 0%, transparent 70%),
+      #1c1612;
     position: relative;
   }
 
@@ -785,6 +818,7 @@
     align-items: center;
     justify-content: flex-end;
     padding: 10px 20px 0;
+    margin-top: 50px;
     min-height: 0;
   }
 
@@ -826,142 +860,112 @@
     z-index: 10;
   }
   .seat-bottom { bottom: -82px; left: 50%; transform: translateX(-50%); }
-  .seat-top { top: -80px; left: 50%; transform: translateX(-50%); flex-direction: column; }
+  .seat-top { top: -130px; left: 50%; transform: translateX(-50%); flex-direction: column; }
   .seat-left { left: -18%; top: 50%; transform: translateY(-50%); flex-direction: column; }
   .seat-right { right: -18%; top: 50%; transform: translateY(-50%); flex-direction: column; }
 
-  .player-info-compact {
+  .player-circle-wrap {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 14px 20px;
-    background: linear-gradient(145deg, rgba(30,25,18,0.92), rgba(15,12,8,0.95));
-    border: 2px solid rgba(139,115,85,0.4);
-    border-radius: 8px;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    gap: 4px;
     position: relative;
     z-index: 2;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+  .player-circle {
+    position: relative;
+    width: 77px;
+    height: 77px;
+    border-radius: 50%;
+    border: 3px solid rgba(138,116,81,0.5);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
   }
 
-  /* ---- ANIMATED ACTIVE BORDER ---- */
-  .player-info-compact.is-active {
-    border-color: rgba(255,215,0,0.8);
-    animation: active-glow 1.5s ease-in-out infinite;
+  /* ---- ACTIVE PLAYER RING ---- */
+  .player-circle.is-active {
+    border-color: transparent;
+    box-shadow:
+      0 0 12px 3px rgba(255,215,0,0.35),
+      0 0 24px 6px rgba(255,215,0,0.12);
+    animation: circle-pulse 2s ease-in-out infinite;
   }
-  @keyframes active-glow {
-    0%, 100% {
-      box-shadow:
-        0 0 8px 2px rgba(255,215,0,0.3),
-        0 0 16px 4px rgba(255,215,0,0.1),
-        inset 0 0 4px rgba(255,215,0,0.05);
-      border-color: rgba(255,215,0,0.5);
-    }
-    25% {
-      box-shadow:
-        4px 0 14px 2px rgba(255,215,0,0.7),
-        0 0 24px 6px rgba(255,215,0,0.25),
-        inset 0 0 6px rgba(255,215,0,0.1);
-      border-color: rgba(255,215,0,0.9);
-    }
-    50% {
-      box-shadow:
-        0 0 18px 4px rgba(255,215,0,0.9),
-        0 0 35px 10px rgba(255,215,0,0.35),
-        inset 0 0 8px rgba(255,215,0,0.15);
-      border-color: rgba(255,215,0,1);
-    }
-    75% {
-      box-shadow:
-        -4px 0 14px 2px rgba(255,215,0,0.7),
-        0 0 24px 6px rgba(255,215,0,0.25),
-        inset 0 0 6px rgba(255,215,0,0.1);
-      border-color: rgba(255,215,0,0.9);
-    }
+  @keyframes circle-pulse {
+    0%, 100% { box-shadow: 0 0 12px 3px rgba(255,215,0,0.35), 0 0 24px 6px rgba(255,215,0,0.12); }
+    50% { box-shadow: 0 0 18px 5px rgba(255,215,0,0.55), 0 0 36px 10px rgba(255,215,0,0.2); }
   }
 
-  .pi-avatar {
-    width: 48px;
-    height: 48px;
+  /* ---- SVG TIMER RING ---- */
+  .timer-ring {
+    position: absolute;
+    inset: -5px;
+    width: calc(100% + 10px);
+    height: calc(100% + 10px);
+    z-index: 3;
+    transform: rotate(-90deg);
+  }
+  .timer-ring-bg {
+    fill: none;
+    stroke: rgba(255,215,0,0.12);
+    stroke-width: 4;
+  }
+  .timer-ring-progress {
+    fill: none;
+    stroke: var(--gold-bright);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 289.03;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .timer-ring-progress.timer-low {
+    stroke: var(--neon-red);
+    animation: ring-flash 0.8s ease-in-out infinite;
+  }
+  @keyframes ring-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .circle-avatar {
+    position: absolute;
+    inset: 2px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.35rem;
-    border: 2px solid var(--gold-dark);
-    flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    font-size: 1.9rem;
+    z-index: 2;
   }
-  .pi-name {
+  .circle-name {
     font-family: var(--font-heading);
-    font-size: 0.92rem;
+    font-size: 0.8rem;
     color: var(--cream);
     white-space: nowrap;
     letter-spacing: 0.5px;
+    background: rgba(28,22,18,0.85);
+    padding: 2px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(138,116,81,0.3);
   }
 
-  /* ---- DEALER CHIP (on table) ---- */
-  .dealer-chip-table {
-    width: 32px;
-    height: 32px;
+  /* ---- DEALER BADGE ---- */
+  .dealer-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: linear-gradient(135deg, #fffbe6, #f0d060);
     color: #3d1a00;
     font-weight: 900;
-    font-size: 0.8rem;
+    font-size: 0.65rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid #8b6914;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.5), 0 0 8px rgba(255,215,0,0.3);
-    z-index: 15;
-  }
-  .dealer-below {
-    margin-top: 6px;
-  }
-  .dealer-above {
-    margin-bottom: 6px;
-    order: -1;
-  }
-  .seat-bottom .dealer-above {
-    margin-bottom: 26px;
-  }
-
-  /* ---- TURN TIMER ---- */
-  .turn-timer {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--gold-bright);
-    background: rgba(0,0,0,0.5);
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid rgba(255,215,0,0.3);
-    min-width: 22px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-  .turn-timer.timer-low {
-    color: var(--neon-red);
-    border-color: rgba(255,45,45,0.5);
-    animation: timer-pulse 0.8s ease-in-out infinite;
-  }
-  @keyframes timer-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  .turn-indicator {
-    font-size: 0.6rem;
-    color: var(--gold-bright);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    animation: pulse-text 1s ease-in-out infinite;
-  }
-  @keyframes pulse-text {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    border: 2px solid #8b6914;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
 
   .seat-cards-row {
@@ -978,8 +982,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 280px;
-    height: 260px;
+    width: 341px;
+    height: 315px;
     z-index: 20;
     display: flex;
     align-items: center;
@@ -1039,6 +1043,30 @@
     filter: brightness(1.3) drop-shadow(0 0 8px rgba(255,215,0,0.5));
   }
 
+  /* ---- INVALID CARD TOAST ---- */
+  .invalid-card-toast {
+    position: absolute;
+    bottom: 170px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(180, 40, 40, 0.92);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: 2px solid #ff6666;
+    z-index: 200;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: toast-pop 0.2s ease-out;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  @keyframes toast-pop {
+    from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+
   /* ---- DIALOG APPEAR ---- */
   .dialog-appear {
     animation: dialog-slide 0.15s ease-out;
@@ -1080,12 +1108,12 @@
     gap: 6px;
     padding: 12px 18px;
     border: 2px solid var(--gold-dark);
-    background: rgba(0,0,0,0.5);
+    background: rgba(20,12,8,0.6);
     cursor: pointer;
     transition: all 0.2s;
     color: var(--cream);
     font-family: var(--font-heading);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
   .bid-btn:hover {
     border-color: var(--gold-bright);
@@ -1101,12 +1129,12 @@
   .pass-btn { margin-top: 4px; }
   .bidding-wait {
     padding: 20px 32px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(20,12,8,0.8);
     border: 1px solid var(--gold-dark);
     text-align: center;
     color: var(--gold);
     font-family: var(--font-heading);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
   }
 
   /* ---- DECLARING ZVANJA ---- */
@@ -1126,7 +1154,7 @@
     font-family: var(--font-heading);
     color: var(--gold);
     margin-bottom: 14px;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
   }
   .zvanja-list {
     display: flex;
@@ -1166,7 +1194,7 @@
   }
   .declaring-wait {
     padding: 20px 32px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(20,12,8,0.8);
     border: 1px solid var(--gold-dark);
     text-align: center;
     color: var(--gold);
@@ -1188,7 +1216,7 @@
   }
   .bubble-text {
     font-family: var(--font-heading);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     color: #ffd700;
     letter-spacing: 0.5px;
     text-shadow: 0 0 6px rgba(255,215,0,0.4);
@@ -1207,32 +1235,76 @@
     transform: translateX(-50%);
     margin-bottom: 4px;
   }
+  .action-bubble::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+  }
   .bubble-below {
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-top: 4px;
+    margin-top: 10px;
+  }
+  .bubble-below::after {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 8px 8px 8px;
+    border-color: transparent transparent var(--gold-bright) transparent;
   }
   .bubble-bottom {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 4px;
+    margin-bottom: 10px;
   }
-  .bubble-up {
-    bottom: 100%;
+  .bubble-bottom::after {
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 4px;
+    border-width: 8px 8px 0 8px;
+    border-color: var(--gold-bright) transparent transparent transparent;
+  }
+  .bubble-right {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 10px;
+  }
+  .bubble-right::after {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 8px 8px 8px 0;
+    border-color: transparent var(--gold-bright) transparent transparent;
+  }
+  .bubble-left {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 10px;
+  }
+  .bubble-left::after {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 8px 0 8px 8px;
+    border-color: transparent transparent transparent var(--gold-bright);
   }
   .animate-bubble {
     animation: bubble-pop-up 0.25s ease-out;
   }
-  .animate-bubble-up {
-    animation: bubble-pop-up 0.25s ease-out;
-  }
   .animate-bubble-down {
     animation: bubble-pop-down 0.25s ease-out;
+  }
+  .animate-bubble-right {
+    animation: bubble-pop-right 0.25s ease-out;
+  }
+  .animate-bubble-left {
+    animation: bubble-pop-left 0.25s ease-out;
   }
   @keyframes bubble-pop-up {
     from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.85); }
@@ -1241,6 +1313,14 @@
   @keyframes bubble-pop-down {
     from { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(0.85); }
     to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+  @keyframes bubble-pop-right {
+    from { opacity: 0; transform: translateY(-50%) translateX(-6px) scale(0.85); }
+    to { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+  }
+  @keyframes bubble-pop-left {
+    from { opacity: 0; transform: translateY(-50%) translateX(6px) scale(0.85); }
+    to { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
   }
 
   /* ---- ROUND END BRIEF ---- */
