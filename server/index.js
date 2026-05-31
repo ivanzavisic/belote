@@ -25,6 +25,10 @@ const server = createServer(app);
 
 // Serve static frontend in production
 const distPath = path.join(__dirname, "../dist");
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  next();
+});
 app.use(express.static(distPath));
 
 const io = new Server(server, {
@@ -75,7 +79,7 @@ function getRoomList() {
       inGame: !!room.game,
     });
   }
-  return list;
+  return list.reverse();
 }
 
 function broadcastRoomList() {
@@ -389,7 +393,7 @@ function handleDeclaration(room, playerIndex, declares) {
 io.on("connection", (socket) => {
   console.log(`Konekcija: ${socket.id}`);
 
-  socket.on("login", ({ nickname, avatarId }) => {
+  socket.on("login", ({ nickname, avatarId, firebaseUid }) => {
     // Prevent duplicate login
     if (players.has(socket.id)) return;
     // Sanitize inputs
@@ -407,6 +411,7 @@ io.on("connection", (socket) => {
       nickname: cleanNick,
       avatarId: cleanAvatar,
       roomId: null,
+      firebaseUid: firebaseUid || null,
     });
 
     socket.emit("welcome", {
@@ -679,6 +684,54 @@ io.on("connection", (socket) => {
     startNewRound(room);
   });
 
+  socket.on("abandonGame", () => {
+    const player = players.get(socket.id);
+    if (!player || !player.roomId) return;
+
+    const room = rooms.get(player.roomId);
+    if (!room || !room.game) return;
+
+    const playerIndex = room.players.findIndex((p) => p.id === socket.id);
+    if (playerIndex === -1) return;
+
+    const abandonerName = room.players[playerIndex]?.nickname || "Igrač";
+
+    // Determine teams: abandoner's team gets nothing, opponents get win
+    // Team 0 = players 0,2 | Team 1 = players 1,3
+    const abandonerTeam = playerIndex % 2; // 0 or 1
+
+    // Send abandon info to all players with their respective results
+    for (let i = 0; i < room.players.length; i++) {
+      const p = room.players[i];
+      if (p.isBot || !p.socketId) continue;
+      const pTeam = i % 2;
+      let result;
+      if (i === playerIndex) {
+        result = "abandoned";
+      } else if (pTeam === abandonerTeam) {
+        result = "teammate"; // no win, no loss
+      } else {
+        result = "win";
+      }
+      io.to(p.socketId).emit("gameAbandoned", {
+        abandonedBy: abandonerName,
+        result,
+      });
+    }
+
+    // End game, disband room entirely
+    room.game = null;
+    // Remove all players from the room
+    for (const p of room.players) {
+      if (!p.isBot && p.socketId) {
+        const pl = players.get(p.socketId);
+        if (pl) pl.roomId = null;
+      }
+    }
+    rooms.delete(room.id);
+    broadcastRoomList();
+  });
+
   socket.on("backToLobby", () => {
     const player = players.get(socket.id);
     if (!player || !player.roomId) return;
@@ -788,4 +841,15 @@ app.get("*", (req, res) => {
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`🃏 Belot server pokrenut na portu ${PORT}`);
+
+  // Keep-alive ping every 14 minutes to prevent Render free tier from sleeping
+  const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
+  if (RENDER_URL) {
+    setInterval(
+      () => {
+        fetch(RENDER_URL).catch(() => {});
+      },
+      14 * 60 * 1000,
+    );
+  }
 });

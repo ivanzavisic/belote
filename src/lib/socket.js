@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 import { appState } from "./state.svelte.js";
+import { recordWin } from "./firebase.js";
 
 const SERVER_URL = import.meta.env.DEV ? "http://localhost:3001" : "";
 const socket = io(SERVER_URL, { autoConnect: false });
@@ -75,6 +76,17 @@ socket.on("backToRoom", (room) => {
   appState.screen = "room";
 });
 
+socket.on("gameAbandoned", (data) => {
+  // Record win for opponents
+  if (data.result === "win" && appState.firebaseUser && !appState.isGuest) {
+    recordWin(appState.firebaseUser.uid).catch(() => {});
+  }
+  appState.abandonInfo = data;
+  appState.gameState = null;
+  appState.screen = "lobby";
+  appState.currentRoom = null;
+});
+
 socket.on("error", (msg) => {
   appState.error = msg;
   setTimeout(() => (appState.error = ""), 4000);
@@ -82,11 +94,15 @@ socket.on("error", (msg) => {
 
 // --- Actions ---
 
-export function login(nickname, avatarId) {
+export function login(nickname, avatarId, firebaseUid) {
   appState.user.nickname = nickname;
   appState.user.avatarId = avatarId;
   socket.connect();
-  socket.emit("login", { nickname, avatarId });
+  socket.emit("login", {
+    nickname,
+    avatarId,
+    firebaseUid: firebaseUid || null,
+  });
 }
 
 export function createRoom(name, settings) {
@@ -135,6 +151,10 @@ export function nextRound() {
 
 export function backToLobby() {
   socket.emit("backToLobby");
+}
+
+export function abandonGame() {
+  socket.emit("abandonGame");
 }
 
 export default socket;

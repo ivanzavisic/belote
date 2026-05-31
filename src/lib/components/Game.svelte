@@ -1,7 +1,8 @@
 <script>
   import { appState, AVATARS, SUIT_NAMES } from '../state.svelte.js';
-  import { bid, playCard, declareZvanja, backToLobby, leaveRoom, respondBelot } from '../socket.js';
+  import { bid, playCard, declareZvanja, backToLobby, leaveRoom, respondBelot, abandonGame } from '../socket.js';
   import { playShuffleSound, playCardSound, playTurnSound, playPopSound, playWinSound, playRoundEndSound, playTrumpSound } from '../sounds.js';
+  import { recordWin, recordLoss, recordAbandon } from '../firebase.js';
   import Card from './Card.svelte';
 
   let gs = $derived(appState.gameState);
@@ -112,11 +113,29 @@
     }
   }
 
+  let showAbandonConfirm = $state(false);
+
   function handleLeave() {
+    if (gs && gs.phase !== 'GAME_OVER') {
+      showAbandonConfirm = true;
+      return;
+    }
     leaveRoom();
     appState.currentRoom = null;
     appState.gameState = null;
     appState.screen = 'lobby';
+  }
+
+  function confirmAbandon() {
+    showAbandonConfirm = false;
+    if (appState.firebaseUser && !appState.isGuest) {
+      recordAbandon(appState.firebaseUser.uid).catch(() => {});
+    }
+    abandonGame();
+  }
+
+  function cancelAbandon() {
+    showAbandonConfirm = false;
   }
 
   let isMyTurn = $derived(gs && gs.currentPlayerIndex === gs.myIndex);
@@ -308,6 +327,20 @@
       playTurnSound();
     }
   });
+
+  // Record win/loss for authenticated players when game ends
+  let statsRecorded = $state(false);
+  $effect(() => {
+    if (!gs || gs.phase !== 'GAME_OVER' || statsRecorded) return;
+    if (!appState.firebaseUser || appState.isGuest) return;
+    statsRecorded = true;
+    const iWon = gs.winner === myTeam;
+    if (iWon) {
+      recordWin(appState.firebaseUser.uid).catch(() => {});
+    } else {
+      recordLoss(appState.firebaseUser.uid).catch(() => {});
+    }
+  });
 </script>
 
 <div class="game-screen">
@@ -315,6 +348,19 @@
     <!-- Header info strip -->
     <div class="game-header-strip">
       <button class="btn btn-small" onclick={handleLeave}>← NATRAG</button>
+
+      {#if showAbandonConfirm}
+        <div class="abandon-overlay">
+          <div class="abandon-dialog panel ornate-border animate-in">
+            <p class="abandon-msg">Jeste li sigurni da želite napustiti igru?</p>
+            <p class="abandon-warn">Igra će se prekinuti za sve igrače.</p>
+            <div class="abandon-btns">
+              <button class="btn btn-small" onclick={cancelAbandon}>Ne</button>
+              <button class="btn btn-small btn-danger" onclick={confirmAbandon}>Da, napusti</button>
+            </div>
+          </div>
+        </div>
+      {/if}
       <span class="badge badge-gold">Do {room?.settings?.targetScore || 1001}</span>
       <span class="badge badge-gold">{room?.settings?.prolaz !== false ? 'PROLAZ' : 'DOSTA'}</span>
       <span class="header-room-name">{room?.name || 'Belot'}</span>
@@ -739,7 +785,7 @@
               {gs.scores[myTeam]} — {gs.scores[otherTeam]}
             </p>
           </div>
-          <button class="btn btn-primary" onclick={backToLobby}>Natrag u Predvorje</button>
+          <button class="btn btn-primary" onclick={backToLobby}>Izađi iz partije</button>
         </div>
       </div>
     {/if}
@@ -1686,5 +1732,46 @@
     font-size: 2rem;
     color: var(--accent-bright);
     font-weight: 700;
+  }
+
+  /* Abandon confirm dialog */
+  .abandon-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(3px);
+  }
+  .abandon-dialog {
+    padding: 28px 32px;
+    text-align: center;
+    max-width: 360px;
+  }
+  .abandon-msg {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+  .abandon-warn {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+  .abandon-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .btn-danger {
+    background: linear-gradient(180deg, #dc3545, #a71d2a) !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+  }
+  .btn-danger:hover {
+    background: linear-gradient(180deg, #e04555, #b72735) !important;
   }
 </style>

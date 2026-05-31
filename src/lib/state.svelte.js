@@ -50,6 +50,10 @@ class AppState {
   isDealing = $state(false);
   lastPlayerAction = $state(null);
   belotPrompt = $state(false);
+  firebaseUser = $state(null); // Firebase auth user
+  playerData = $state(null); // Firestore player data { uid, nickname, wins, losses, abandoned }
+  isGuest = $state(false);
+  abandonInfo = $state(null); // { abandonedBy, result }
 }
 
 export const appState = new AppState();

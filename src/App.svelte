@@ -1,9 +1,31 @@
 <script>
   import { appState } from './lib/state.svelte.js';
+  import { onAuth, getPlayerData } from './lib/firebase.js';
+  import { login } from './lib/socket.js';
   import Login from './lib/components/Login.svelte';
   import Lobby from './lib/components/Lobby.svelte';
   import Room from './lib/components/Room.svelte';
   import Game from './lib/components/Game.svelte';
+
+  let authChecked = $state(false);
+
+  $effect(() => {
+    const unsub = onAuth(async (user) => {
+      if (user) {
+        const data = await getPlayerData(user.uid);
+        appState.firebaseUser = user;
+        appState.playerData = data;
+        appState.isGuest = false;
+        const nick = data?.nickname || user.displayName || user.email?.split('@')[0] || 'Igrač';
+        const avatarId = Number(localStorage.getItem('belot_avatar')) || 0;
+        if (appState.screen === 'login') {
+          login(nick, avatarId, user.uid);
+        }
+      }
+      authChecked = true;
+    });
+    return unsub;
+  });
 </script>
 
 <div class="app-wrapper">
@@ -13,7 +35,11 @@
     </div>
   {/if}
 
-  {#if appState.screen === 'login'}
+  {#if !authChecked}
+    <div class="auth-loading">
+      <span class="auth-spinner"></span>
+    </div>
+  {:else if appState.screen === 'login'}
     <Login />
   {:else if appState.screen === 'lobby'}
     <Lobby />
@@ -44,5 +70,24 @@
     z-index: 9999;
     font-size: 0.9rem;
     box-shadow: 0 0 20px rgba(255,45,45,0.3);
+  }
+
+  .auth-loading {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0e;
+  }
+  .auth-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(201,168,76,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 </style>
