@@ -81,7 +81,12 @@
 
   function handleBid(suit) { bid(suit); }
   function handlePass() { bid(null); }
-  function handlePlayCard(card) { playCard(card); }
+  let playLock = $state(false);
+  function handlePlayCard(card) {
+    if (playLock) return;
+    playLock = true;
+    playCard(card);
+  }
   function handleBelot(accept) { respondBelot(accept); appState.belotPrompt = false; }
 
   function toggleCardSelection(card) {
@@ -185,7 +190,7 @@
 
   function handleBackToLobby() {
     appState.rematchInfo = null;
-    backToLobby();
+    leaveRoom();
   }
 
   let activeVisualPos = $derived.by(() => {
@@ -377,6 +382,14 @@
       recordLoss(appState.firebaseUser.uid).catch(() => {});
     }
   });
+
+  // Reset play lock when game state updates
+  $effect(() => {
+    if (gs) {
+      gs.currentPlayerIndex;
+      playLock = false;
+    }
+  });
 </script>
 
 <div class="game-screen">
@@ -522,12 +535,12 @@
                   <span class="circle-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
-                  {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">CARD DEALER</span>
-                  {/if}
                 </div>
                 <span class="circle-name team-blue">{p.player.nickname}</span>
               </div>
+              {#if gs.dealerIndex === p.actualIdx}
+                <span class="dealer-chip dealer-chip-top">D</span>
+              {/if}
               {#if actionBubbles[2]}
                 <div class="action-bubble bubble-below animate-bubble-down bubble-type-{actionBubbles[2].type}" key={actionBubbles[2].key}>
                   <span class="bubble-text">{actionBubbles[2].text}</span>
@@ -567,11 +580,11 @@
                   <span class="circle-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
-                  {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">CARD DEALER</span>
-                  {/if}
                 </div>
                 <span class="circle-name team-red">{p.player.nickname}</span>
+                {#if gs.dealerIndex === p.actualIdx}
+                  <span class="dealer-chip dealer-chip-left">D</span>
+                {/if}
               </div>
               {#if actionBubbles[3]}
                 <div class="action-bubble bubble-right animate-bubble-right bubble-type-{actionBubbles[3].type}" key={actionBubbles[3].key}>
@@ -612,11 +625,11 @@
                   <span class="circle-avatar" style="background: {getAvatar(p.player.avatarId).bg}">
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
-                  {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">CARD DEALER</span>
-                  {/if}
                 </div>
                 <span class="circle-name team-red">{p.player.nickname}</span>
+                {#if gs.dealerIndex === p.actualIdx}
+                  <span class="dealer-chip dealer-chip-right">D</span>
+                {/if}
               </div>
               {#if actionBubbles[1]}
                 <div class="action-bubble bubble-left animate-bubble-left bubble-type-{actionBubbles[1].type}" key={actionBubbles[1].key}>
@@ -649,12 +662,12 @@
                 <span class="circle-avatar" style="background: {getAvatar(appState.user.avatarId).bg}">
                   {getAvatar(appState.user.avatarId).emoji}
                 </span>
-                {#if gs.dealerIndex === gs.myIndex}
-                  <span class="dealer-badge">CARD DEALER</span>
-                {/if}
               </div>
               <span class="circle-name team-blue">{appState.user.nickname}</span>
             </div>
+            {#if gs.dealerIndex === gs.myIndex}
+              <span class="dealer-chip dealer-chip-bottom">D</span>
+            {/if}
             {#if actionBubbles[0]}
               <div class="action-bubble bubble-bottom animate-bubble bubble-type-{actionBubbles[0].type}" key={actionBubbles[0].key}>
                 <span class="bubble-text">{actionBubbles[0].text}</span>
@@ -1214,36 +1227,61 @@
     color: #ffe0e0;
   }
 
-  /* ---- DEALER BADGE ---- */
-  .dealer-badge {
+  /* ---- DEALER CHIP ---- */
+  .dealer-chip {
     position: absolute;
-    bottom: -8px;
-    right: 50%;
-    transform: translateX(50%);
-    padding: 3px 10px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     background: linear-gradient(135deg, var(--accent-bright), var(--accent));
     color: var(--bg-darkest);
     font-weight: 900;
-    font-size: 0.55rem;
-    letter-spacing: 1.5px;
-    white-space: nowrap;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--accent-dim);
-    z-index: 10;
-    box-shadow: 0 2px 10px rgba(201,168,76,0.4);
-    animation: dealer-pulse 1.8s ease-in-out infinite;
+    border: 3px solid var(--accent-dim);
+    z-index: 60;
+    box-shadow: 0 2px 8px rgba(201,168,76,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+    animation: dealer-pulse 3.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  /* Top & bottom: place left of bubble area */
+  .dealer-chip-top {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    margin-left: -50px;
+  }
+  .dealer-chip-bottom {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    margin-left: -50px;
+  }
+  /* Left & right: place above bubble area */
+  .dealer-chip-left {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+    margin-top: -30px;
+  }
+  .dealer-chip-right {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+    margin-top: -30px;
   }
   @keyframes dealer-pulse {
     0%, 100% {
-      background: linear-gradient(135deg, var(--accent-bright), var(--accent));
-      box-shadow: 0 2px 10px rgba(201,168,76,0.4);
+      box-shadow: 0 2px 8px rgba(201,168,76,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
     }
     50% {
-      background: linear-gradient(135deg, #f5e6b8, var(--accent-bright));
-      box-shadow: 0 2px 14px rgba(232,212,139,0.6), 0 0 20px rgba(201,168,76,0.3);
+      box-shadow: 0 2px 10px rgba(201,168,76,0.45), inset 0 1px 2px rgba(255,255,255,0.25);
     }
   }
 
