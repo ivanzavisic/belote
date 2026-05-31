@@ -81,10 +81,11 @@
 
   function handleBid(suit) { bid(suit); }
   function handlePass() { bid(null); }
-  let playLock = $state(false);
+  let lastPlayTime = 0;
   function handlePlayCard(card) {
-    if (playLock) return;
-    playLock = true;
+    const now = Date.now();
+    if (now - lastPlayTime < 800) return;
+    lastPlayTime = now;
     playCard(card);
   }
   function handleBelot(accept) { respondBelot(accept); appState.belotPrompt = false; }
@@ -383,13 +384,7 @@
     }
   });
 
-  // Reset play lock when game state updates
-  $effect(() => {
-    if (gs) {
-      gs.currentPlayerIndex;
-      playLock = false;
-    }
-  });
+
 </script>
 
 <div class="game-screen">
@@ -1128,7 +1123,7 @@
     z-index: 10;
   }
   .seat-bottom { bottom: -82px; left: 50%; transform: translateX(-50%); }
-  .seat-top { top: -130px; left: 50%; transform: translateX(-50%); flex-direction: column; }
+  .seat-top { top: -145px; left: 50%; transform: translateX(-50%); flex-direction: column; }
   .seat-left { left: -12%; top: 50%; transform: translateY(-50%); flex-direction: column; }
   .seat-right { right: -12%; top: 50%; transform: translateY(-50%); flex-direction: column; }
 
@@ -1142,8 +1137,8 @@
   }
   .player-circle {
     position: relative;
-    width: 85px;
-    height: 85px;
+    width: 94px;
+    height: 94px;
     border-radius: 50%;
     border: 2px solid rgba(201,168,76,0.3);
     transition: border-color 0.3s, box-shadow 0.3s;
@@ -1184,6 +1179,11 @@
     stroke-linecap: round;
     stroke-dasharray: 289.03;
     transition: stroke-dashoffset 1s linear;
+    animation: timer-blink 2s ease-in-out infinite;
+  }
+  @keyframes timer-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
   }
   .timer-ring-progress.timer-low {
     stroke: var(--neon-red);
@@ -1201,20 +1201,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.9rem;
+    font-size: 2.1rem;
     z-index: 2;
   }
   .circle-name {
     font-family: var(--font-heading);
-    font-size: 0.75rem;
+    font-size: 0.95rem;
     color: var(--cream);
     white-space: nowrap;
     letter-spacing: 0.5px;
     background: rgba(12,12,16,0.85);
-    padding: 2px 10px;
+    padding: 4px 14px;
     border-radius: 10px;
     border: 1px solid rgba(201,168,76,0.2);
-    font-weight: 500;
+    font-weight: 600;
   }
   .circle-name.team-blue {
     background: rgba(37, 99, 235, 0.7);

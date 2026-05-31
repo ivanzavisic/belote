@@ -687,6 +687,11 @@ io.on("connection", (socket) => {
     const room = rooms.get(player.roomId);
     if (!room || !room.game) return;
 
+    // Prevent rapid-fire plays from same player
+    const now = Date.now();
+    if (player.lastPlayTime && now - player.lastPlayTime < 500) return;
+    player.lastPlayTime = now;
+
     const playerIndex = room.players.findIndex((p) => p.id === socket.id);
     if (playerIndex === -1) return;
 
