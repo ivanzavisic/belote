@@ -577,6 +577,46 @@
     .leaderboard-section {
       width: 100%;
     }
+    .lobby-header {
+      padding: 10px 12px;
+      gap: 8px;
+    }
+    .lobby-title {
+      font-size: 1rem;
+      letter-spacing: 3px;
+    }
+    .online-indicator {
+      font-size: 0.8rem;
+    }
+    .lobby-main {
+      padding: 12px;
+    }
+    .lobby-columns {
+      gap: 16px;
+    }
+    .section-header h2 {
+      font-size: 1rem;
+    }
+    .room-card {
+      padding: 12px 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .room-name {
+      font-size: 0.95rem;
+    }
+    .room-details {
+      flex-wrap: wrap;
+    }
+    .leaderboard-panel {
+      padding: 14px;
+    }
+    .lb-h-wl, .lb-stats {
+      display: none;
+    }
+    .user-name {
+      display: none;
+    }
   }
 
   /* ---- PROFILE DIALOG ---- */

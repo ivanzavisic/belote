@@ -246,6 +246,28 @@ function executePlayCard(room, playerIndex, card) {
   }
 
   if (result.action === "TRICK_DONE") {
+    // Check "na dosta" instant win - if a team passes target mid-round
+    if (!game.settings.prolaz) {
+      const target = game.settings.targetScore;
+      for (let t = 0; t < 2; t++) {
+        const runningTotal =
+          game.scores[t] +
+          game.cardPointsWon[t] +
+          game.zvanjaPoints[t] +
+          game.belotPoints[t];
+        if (runningTotal >= target) {
+          // Instant win
+          game.winner = t;
+          game.phase = "GAME_OVER";
+          game.scores[0] +=
+            game.cardPointsWon[0] + game.zvanjaPoints[0] + game.belotPoints[0];
+          game.scores[1] +=
+            game.cardPointsWon[1] + game.zvanjaPoints[1] + game.belotPoints[1];
+          sendGameUpdate(room);
+          return null;
+        }
+      }
+    }
     // Show trick briefly, then clear
     sendGameUpdate(room);
     setTimeout(() => {
@@ -559,6 +581,37 @@ io.on("connection", (socket) => {
     broadcastRoomList();
   });
 
+  socket.on("swapPlayers", (data) => {
+    if (!data || typeof data.from !== "number" || typeof data.to !== "number")
+      return;
+    const player = players.get(socket.id);
+    if (!player || !player.roomId) return;
+
+    const room = rooms.get(player.roomId);
+    if (!room) return;
+    if (room.hostId !== socket.id) return;
+    if (room.game) return; // Can't swap during game
+
+    const { from, to } = data;
+    if (
+      from < 0 ||
+      from >= room.players.length ||
+      to < 0 ||
+      to >= room.players.length
+    )
+      return;
+    if (from === to) return;
+
+    // Swap the two players in the array
+    const temp = room.players[from];
+    room.players[from] = room.players[to];
+    room.players[to] = temp;
+
+    // If host was swapped, hostId stays the same (it's the socket id, not the index)
+    sendRoomUpdate(room);
+    broadcastRoomList();
+  });
+
   socket.on("startGame", () => {
     const player = players.get(socket.id);
     if (!player || !player.roomId) return;
@@ -741,6 +794,74 @@ io.on("connection", (socket) => {
 
     // End game, return everyone to room
     room.game = null;
+    room.rematchReady = null;
+
+    // Remove bots
+    room.players = room.players.filter((p) => !p.isBot);
+
+    sendRoomUpdate(room);
+    for (const p of room.players) {
+      if (!p.isBot && p.socketId) {
+        io.to(p.socketId).emit("backToRoom", {
+          id: room.id,
+          name: room.name,
+          hostId: room.hostId,
+          settings: room.settings,
+          players: room.players.map((pl) => ({
+            id: pl.id,
+            nickname: pl.nickname,
+            avatarId: pl.avatarId,
+            isBot: pl.isBot,
+          })),
+        });
+      }
+    }
+    broadcastRoomList();
+  });
+
+  socket.on("rematchReady", () => {
+    const player = players.get(socket.id);
+    if (!player || !player.roomId) return;
+
+    const room = rooms.get(player.roomId);
+    if (!room || !room.game || room.game.phase !== "GAME_OVER") return;
+
+    if (!room.rematchReady) room.rematchReady = new Set();
+    room.rematchReady.add(socket.id);
+
+    // Broadcast who is ready
+    const readyList = [...room.rematchReady];
+    for (const p of room.players) {
+      if (!p.isBot && p.socketId) {
+        io.to(p.socketId).emit("rematchUpdate", {
+          ready: readyList,
+          total: room.players.filter((pl) => !pl.isBot).length,
+        });
+      }
+    }
+  });
+
+  socket.on("rematchStart", () => {
+    const player = players.get(socket.id);
+    if (!player || !player.roomId) return;
+
+    const room = rooms.get(player.roomId);
+    if (!room) return;
+    if (room.hostId !== socket.id) return;
+    if (!room.game || room.game.phase !== "GAME_OVER") return;
+
+    // Check all non-host humans are ready
+    const nonHostHumans = room.players.filter(
+      (p) => !p.isBot && p.id !== socket.id,
+    );
+    const allReady = nonHostHumans.every(
+      (p) => room.rematchReady && room.rematchReady.has(p.socketId),
+    );
+    if (!allReady) return;
+
+    // End game, go back to room
+    room.game = null;
+    room.rematchReady = null;
 
     // Remove bots
     room.players = room.players.filter((p) => !p.isBot);

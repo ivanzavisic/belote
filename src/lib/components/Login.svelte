@@ -5,7 +5,6 @@
     registerWithEmail,
     loginWithEmail,
     loginWithGoogle,
-    getPlayerData,
   } from '../firebase.js';
 
   let mode = $state('choose'); // 'choose', 'login', 'register', 'guest'
@@ -27,15 +26,9 @@
     loading = true;
     errorMsg = '';
     try {
-      const user = await loginWithEmail(email, password);
-      const data = await getPlayerData(user.uid);
-      appState.firebaseUser = user;
-      appState.playerData = data;
-      appState.isGuest = false;
-      const nick = data?.nickname || user.email.split('@')[0];
-      localStorage.setItem('belot_nickname', nick);
+      await loginWithEmail(email, password);
       localStorage.setItem('belot_avatar', String(selectedAvatar));
-      login(nick, selectedAvatar, user.uid);
+      // onAuth in App.svelte handles the rest
     } catch (e) {
       errorMsg = getErrorMessage(e.code);
     } finally {
@@ -58,14 +51,9 @@
     loading = true;
     errorMsg = '';
     try {
-      const user = await registerWithEmail(email, password, nickname.trim());
-      const data = await getPlayerData(user.uid);
-      appState.firebaseUser = user;
-      appState.playerData = data;
-      appState.isGuest = false;
-      localStorage.setItem('belot_nickname', nickname.trim());
+      await registerWithEmail(email, password, nickname.trim());
       localStorage.setItem('belot_avatar', String(selectedAvatar));
-      login(nickname.trim(), selectedAvatar, user.uid);
+      // onAuth in App.svelte handles the rest
     } catch (e) {
       errorMsg = getErrorMessage(e.code);
     } finally {
@@ -77,15 +65,9 @@
     loading = true;
     errorMsg = '';
     try {
-      const user = await loginWithGoogle();
-      const data = await getPlayerData(user.uid);
-      appState.firebaseUser = user;
-      appState.playerData = data;
-      appState.isGuest = false;
-      const nick = data?.nickname || user.displayName || user.email.split('@')[0];
-      localStorage.setItem('belot_nickname', nick);
+      await loginWithGoogle();
       localStorage.setItem('belot_avatar', String(selectedAvatar));
-      login(nick, selectedAvatar, user.uid);
+      // onAuth in App.svelte handles the rest
     } catch (e) {
       console.error('Google login error:', e);
       errorMsg = getErrorMessage(e.code);
@@ -566,5 +548,56 @@
     40% { transform: translateX(8px); }
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
+  }
+
+  @media (max-width: 600px) {
+    .login-screen {
+      align-items: flex-start;
+      overflow-y: auto;
+    }
+    .login-content {
+      padding: 16px 12px;
+      max-width: 100%;
+    }
+    .logo-section {
+      margin-bottom: 20px;
+    }
+    .logo {
+      font-size: 2.8rem;
+      letter-spacing: 8px;
+    }
+    .subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+    }
+    .decorative-line {
+      width: 120px;
+      margin-top: 10px;
+    }
+    .login-form {
+      padding: 20px 16px;
+    }
+    .form-title {
+      font-size: 1rem;
+    }
+    .avatar-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .avatar-emoji {
+      font-size: 1.4rem;
+      width: 38px;
+      height: 38px;
+    }
+    .login-btn {
+      font-size: 0.95rem;
+      padding: 14px;
+    }
+    .auth-buttons {
+      flex-direction: column;
+    }
+    .footer-text {
+      margin-top: 16px;
+    }
   }
 </style>

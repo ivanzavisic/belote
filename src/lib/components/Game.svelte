@@ -1,6 +1,6 @@
 <script>
   import { appState, AVATARS, SUIT_NAMES } from '../state.svelte.js';
-  import { bid, playCard, declareZvanja, backToLobby, leaveRoom, respondBelot, abandonGame } from '../socket.js';
+  import { bid, playCard, declareZvanja, backToLobby, leaveRoom, respondBelot, abandonGame, rematchReady, rematchStart } from '../socket.js';
   import { playShuffleSound, playCardSound, playTurnSound, playPopSound, playWinSound, playRoundEndSound, playTrumpSound } from '../sounds.js';
   import { recordWin, recordLoss, recordAbandon } from '../firebase.js';
   import Card from './Card.svelte';
@@ -18,6 +18,25 @@
   let trumpAnnouncementSuit = $state(null);
   let suppressDeclaring = $state(false);
   let prevTrickLen = $state(0);
+
+  // Mobile orientation detection
+  let isPortrait = $state(false);
+  let isMobile = $state(false);
+
+  function checkOrientation() {
+    isMobile = window.innerWidth <= 1024 && 'ontouchstart' in window;
+    isPortrait = isMobile && window.innerHeight > window.innerWidth;
+  }
+
+  $effect(() => {
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  });
   let prevPhase = $state('');
   let turnTimer = $state(15);
   let _timerInterval = null;
@@ -151,6 +170,23 @@
   let otherTeam = $derived(1 - myTeam);
   let trumpSuitName = $derived(gs && gs.trump ? SUIT_NAMES[gs.trump] : null);
   let isLastBidder = $derived(gs && gs.consecutivePasses === 3);
+
+  let isHost = $derived(room && appState.user.id === room.hostId);
+  let myRematchReady = $derived(appState.rematchInfo && appState.rematchInfo.ready.includes(appState.user.id));
+  let allReadyForRematch = $derived(appState.rematchInfo && appState.rematchInfo.ready.length >= appState.rematchInfo.total - 1);
+
+  function handleRematchReady() {
+    rematchReady();
+  }
+
+  function handleRematchStart() {
+    rematchStart();
+  }
+
+  function handleBackToLobby() {
+    appState.rematchInfo = null;
+    backToLobby();
+  }
 
   let activeVisualPos = $derived.by(() => {
     if (!gs) return -1;
@@ -344,6 +380,16 @@
 </script>
 
 <div class="game-screen">
+  {#if isPortrait}
+    <div class="rotate-overlay">
+      <div class="rotate-content">
+        <div class="rotate-icon">📱</div>
+        <p class="rotate-text">Okreni mobitel</p>
+        <p class="rotate-hint">Igra zahtijeva landscape prikaz</p>
+      </div>
+    </div>
+  {/if}
+
   {#if gs}
     <!-- Header info strip -->
     <div class="game-header-strip">
@@ -785,7 +831,27 @@
               {gs.scores[myTeam]} — {gs.scores[otherTeam]}
             </p>
           </div>
-          <button class="btn btn-primary" onclick={backToLobby}>Izađi iz partije</button>
+
+          <div class="rematch-section">
+            {#if appState.rematchInfo}
+              <p class="rematch-status">Spremni: {appState.rematchInfo.ready.length} / {appState.rematchInfo.total}</p>
+            {/if}
+
+            {#if isHost}
+              {#if allReadyForRematch}
+                <button class="btn btn-success" onclick={handleRematchStart}>🔄 Revanš!</button>
+              {:else}
+                <button class="btn btn-secondary" disabled>Čekam igrače...</button>
+              {/if}
+            {:else}
+              {#if myRematchReady}
+                <button class="btn btn-secondary" disabled>✓ Spreman</button>
+              {:else}
+                <button class="btn btn-success" onclick={handleRematchReady}>🔄 Revanš?</button>
+              {/if}
+            {/if}
+            <button class="btn btn-primary" onclick={handleBackToLobby}>Izađi iz partije</button>
+          </div>
         </div>
       </div>
     {/if}
@@ -1734,6 +1800,31 @@
     font-weight: 700;
   }
 
+  .rematch-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .rematch-status {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .btn-success {
+    background: var(--neon-green);
+    color: #111;
+    font-weight: 700;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .btn-success:hover {
+    filter: brightness(1.1);
+  }
+
   /* Abandon confirm dialog */
   .abandon-overlay {
     position: fixed;
@@ -1773,5 +1864,41 @@
   }
   .btn-danger:hover {
     background: linear-gradient(180deg, #e04555, #b72735) !important;
+  }
+
+  /* Rotate overlay for portrait mobile */
+  .rotate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(10, 10, 14, 0.97);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(12px);
+  }
+  .rotate-content {
+    text-align: center;
+  }
+  .rotate-icon {
+    font-size: 4rem;
+    animation: rotate-phone 2s ease-in-out infinite;
+    margin-bottom: 20px;
+  }
+  .rotate-text {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    color: var(--accent-bright);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  .rotate-hint {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  @keyframes rotate-phone {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(90deg); }
+    50%, 75% { transform: rotate(90deg); }
   }
 </style>

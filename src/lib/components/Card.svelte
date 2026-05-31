@@ -43,7 +43,7 @@
     object-fit: contain;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    filter: brightness(0.76) contrast(2) saturate(1.2);
+    filter: brightness(0.82) contrast(1.65) saturate(1.15);
   }
 
   .card:hover {

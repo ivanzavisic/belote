@@ -18,6 +18,7 @@
         appState.isGuest = false;
         const nick = data?.nickname || user.displayName || user.email?.split('@')[0] || 'Igrač';
         const avatarId = Number(localStorage.getItem('belot_avatar')) || 0;
+        localStorage.setItem('belot_nickname', nick);
         if (appState.screen === 'login') {
           login(nick, avatarId, user.uid);
         }

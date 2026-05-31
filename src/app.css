@@ -36,6 +36,8 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -222,6 +224,24 @@ body {
   box-shadow:
     0 0 40px var(--shadow-accent),
     0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 600px) {
+  .modal {
+    min-width: unset;
+    width: 92vw;
+    padding: 24px 16px;
+    border-radius: 12px;
+  }
+  .modal h2 {
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
 }
 
 .modal h2 {

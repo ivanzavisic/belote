@@ -1,11 +1,12 @@
 <script>
   import { appState, AVATARS } from '../state.svelte.js';
-  import { leaveRoom, addBot, removePlayer, startGame } from '../socket.js';
+  import { leaveRoom, addBot, removePlayer, startGame, swapPlayers } from '../socket.js';
 
   let room = $derived(appState.currentRoom);
   let isHost = $derived(room && room.hostId === appState.user.id);
   let playerCount = $derived(room ? room.players.length : 0);
   let canStart = $derived(playerCount === 4);
+  let selectedSeat = $state(null);
 
   function getAvatar(id) {
     return AVATARS[id] || AVATARS[0];
@@ -19,6 +20,23 @@
     leaveRoom();
     appState.currentRoom = null;
     appState.screen = 'lobby';
+  }
+
+  function handleSeatClick(seatIndex) {
+    if (!isHost) return;
+    const player = room.players[seatIndex];
+    if (selectedSeat === null) {
+      // First click: select a seat that has a player (not yourself though — any occupied seat)
+      if (player) {
+        selectedSeat = seatIndex;
+      }
+    } else {
+      // Second click: swap only if target also has a player
+      if (seatIndex !== selectedSeat && player) {
+        swapPlayers(selectedSeat, seatIndex);
+      }
+      selectedSeat = null;
+    }
   }
 
   const seatLabels = ['Jug', 'Istok', 'Sjever', 'Zapad'];
@@ -51,7 +69,17 @@
           {#each [0, 1, 2, 3] as seatIndex}
             {@const player = room.players[seatIndex]}
             {@const posClass = ['seat-bottom', 'seat-right', 'seat-top', 'seat-left'][seatIndex]}
-            <div class="seat {posClass}" class:occupied={player} class:team-a={seatIndex % 2 === 0} class:team-b={seatIndex % 2 !== 0}>
+            <div
+              class="seat {posClass}"
+              class:occupied={player}
+              class:team-a={seatIndex % 2 === 0}
+              class:team-b={seatIndex % 2 !== 0}
+              class:seat-selected={selectedSeat === seatIndex}
+              class:seat-swappable={isHost && selectedSeat !== null && selectedSeat !== seatIndex}
+              onclick={() => handleSeatClick(seatIndex)}
+              role={isHost ? 'button' : undefined}
+              tabindex={isHost ? 0 : undefined}
+            >
               {#if player}
                 <div class="player-circle-wrap">
                   <div class="player-circle">
@@ -200,6 +228,29 @@
     position: absolute;
     width: 140px;
     text-align: center;
+    cursor: default;
+  }
+
+  .seat-selected .player-circle {
+    border-color: var(--accent-bright) !important;
+    box-shadow: 0 0 20px rgba(201,168,76,0.5), 0 0 40px rgba(201,168,76,0.2) !important;
+    animation: selected-glow 1s ease-in-out infinite alternate;
+  }
+  @keyframes selected-glow {
+    from { box-shadow: 0 0 16px rgba(201,168,76,0.4); }
+    to { box-shadow: 0 0 28px rgba(201,168,76,0.6); }
+  }
+
+  .seat-swappable {
+    cursor: pointer;
+  }
+  .seat-swappable .player-circle {
+    border-style: dashed;
+    border-color: rgba(201,168,76,0.5);
+  }
+  .seat-swappable:hover .player-circle {
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 14px rgba(201,168,76,0.3);
   }
 
   .seat-bottom { bottom: -30px; left: 50%; transform: translateX(-50%); }
@@ -337,5 +388,60 @@
     color: var(--accent-bright);
     font-family: var(--font-heading);
     letter-spacing: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .room-header {
+      padding: 10px 12px;
+    }
+    .room-name-display {
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+    .room-settings-info {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .room-main {
+      padding: 12px;
+    }
+    .table-layout {
+      max-width: 100%;
+    }
+    .table-felt {
+      aspect-ratio: 1.8 / 1;
+    }
+    .table-logo {
+      font-size: 1.2rem;
+      letter-spacing: 4px;
+    }
+    .table-sub {
+      font-size: 0.7rem;
+    }
+    .seat {
+      width: 90px;
+    }
+    .player-circle {
+      width: 52px;
+      height: 52px;
+    }
+    .circle-avatar {
+      font-size: 1.3rem;
+    }
+    .circle-name {
+      font-size: 0.6rem;
+      padding: 1px 6px;
+    }
+    .seat-bottom { bottom: -20px; }
+    .seat-top { top: -20px; }
+    .seat-left { left: -20px; }
+    .seat-right { right: -20px; }
+    .host-controls {
+      margin-top: 20px;
+    }
+    .start-btn {
+      font-size: 0.95rem;
+      padding: 14px 28px;
+    }
   }
 </style>

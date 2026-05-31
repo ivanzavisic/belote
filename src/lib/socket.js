@@ -73,6 +73,7 @@ socket.on("gameOver", (state) => {
 socket.on("backToRoom", (room) => {
   appState.currentRoom = room;
   appState.gameState = null;
+  appState.rematchInfo = null;
   appState.screen = "room";
 });
 
@@ -90,6 +91,10 @@ socket.on("gameAbandoned", (data) => {
 socket.on("error", (msg) => {
   appState.error = msg;
   setTimeout(() => (appState.error = ""), 4000);
+});
+
+socket.on("rematchUpdate", (data) => {
+  appState.rematchInfo = data;
 });
 
 // --- Actions ---
@@ -125,6 +130,10 @@ export function removePlayer(index) {
   socket.emit("removePlayer", index);
 }
 
+export function swapPlayers(fromIndex, toIndex) {
+  socket.emit("swapPlayers", { from: fromIndex, to: toIndex });
+}
+
 export function startGame() {
   socket.emit("startGame");
 }
@@ -155,6 +164,14 @@ export function backToLobby() {
 
 export function abandonGame() {
   socket.emit("abandonGame");
+}
+
+export function rematchReady() {
+  socket.emit("rematchReady");
+}
+
+export function rematchStart() {
+  socket.emit("rematchStart");
 }
 
 export default socket;

@@ -1,4 +1,4 @@
-const SUITS = ["heart", "bell", "acorn", "leaf"];
+const SUITS = ["heart", "bell", "leaf", "acorn"];
 const VALUES = [
   "seven",
   "eight",

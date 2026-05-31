@@ -54,6 +54,7 @@ class AppState {
   playerData = $state(null); // Firestore player data { uid, nickname, wins, losses, abandoned }
   isGuest = $state(false);
   abandonInfo = $state(null); // { abandonedBy, result }
+  rematchInfo = $state(null); // { ready: [], total: number }
 }
 
 export const appState = new AppState();

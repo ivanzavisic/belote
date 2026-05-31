@@ -134,7 +134,10 @@ export async function recordLoss(uid) {
     if (!snap.exists()) return;
     const d = snap.data();
     const newLosses = (d.losses || 0) + 1;
-    tx.update(ref, { losses: newLosses, score: calcScore(d.wins || 0, newLosses) });
+    tx.update(ref, {
+      losses: newLosses,
+      score: calcScore(d.wins || 0, newLosses),
+    });
   });
 }
 
