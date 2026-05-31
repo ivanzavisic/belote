@@ -49,6 +49,7 @@ class AppState {
   error = $state("");
   isDealing = $state(false);
   lastPlayerAction = $state(null);
+  belotPrompt = $state(false);
 }
 
 export const appState = new AppState();

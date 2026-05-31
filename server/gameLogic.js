@@ -694,11 +694,10 @@ function processPlay(game, playerIndex, card) {
   );
   if (!isValid) return { error: "Ne možeš igrati tu kartu" };
 
-  // Check Belot
-  let belot = false;
+  // Check Belot (king + ober of trump) — don't apply points yet, let player decide
+  let belotAvailable = false;
   if (checkBelot(game.hands[playerIndex], card, game.trump)) {
-    belot = true;
-    game.belotPoints[getTeam(playerIndex)] += 20;
+    belotAvailable = true;
   }
 
   // Remove card from hand
@@ -710,7 +709,7 @@ function processPlay(game, playerIndex, card) {
   if (game.currentTrick.length < 4) {
     // Next player
     game.currentPlayer = (game.currentPlayer + 1) % 4;
-    return { action: "NEXT_PLAY", belot };
+    return { action: "NEXT_PLAY", belotAvailable, playerIndex };
   }
 
   // Trick complete
@@ -735,7 +734,8 @@ function processPlay(game, playerIndex, card) {
     action: isLastTrick ? "ROUND_OVER" : "TRICK_DONE",
     winner,
     points: pts,
-    belot,
+    belotAvailable,
+    playerIndex,
     isLastTrick,
   };
 }
@@ -824,6 +824,7 @@ export {
   getCardPoints,
   getTeam,
   getPartnerIndex,
+  checkBelot,
   getTrickWinner,
   SUITS,
   VALUES,

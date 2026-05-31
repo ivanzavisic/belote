@@ -1,6 +1,6 @@
 <script>
   import { appState, AVATARS, SUIT_NAMES } from '../state.svelte.js';
-  import { bid, playCard, declareZvanja, backToLobby, leaveRoom } from '../socket.js';
+  import { bid, playCard, declareZvanja, backToLobby, leaveRoom, respondBelot } from '../socket.js';
   import { playShuffleSound, playCardSound, playTurnSound, playPopSound, playWinSound, playRoundEndSound, playTrumpSound } from '../sounds.js';
   import Card from './Card.svelte';
 
@@ -14,6 +14,7 @@
   let displayedCardPoints = $state([0, 0]);
   let actionBubbles = $state({}); // { [playerIndex]: { text, cards, key } }
   let trumpAnnouncement = $state('');
+  let trumpAnnouncementSuit = $state(null);
   let suppressDeclaring = $state(false);
   let prevTrickLen = $state(0);
   let prevPhase = $state('');
@@ -61,6 +62,7 @@
   function handleBid(suit) { bid(suit); }
   function handlePass() { bid(null); }
   function handlePlayCard(card) { playCard(card); }
+  function handleBelot(accept) { respondBelot(accept); appState.belotPrompt = false; }
 
   function toggleCardSelection(card) {
     const idx = selectedCards.findIndex(c => c.suit === card.suit && c.value === card.value);
@@ -240,8 +242,9 @@
     if (action.type === 'bid') {
       const callerName = gs.players[action.playerIndex]?.nickname || '?';
       trumpAnnouncement = `${callerName} ulazi u ${action.text}`;
+      trumpAnnouncementSuit = action.suit || null;
       suppressDeclaring = true;
-      setTimeout(() => { trumpAnnouncement = ''; suppressDeclaring = false; }, 2500);
+      setTimeout(() => { trumpAnnouncement = ''; trumpAnnouncementSuit = null; suppressDeclaring = false; }, 2500);
     }
 
     // Sound for bubbles
@@ -428,7 +431,7 @@
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
                   {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">DEALER</span>
+                    <span class="dealer-badge">CARD DEALER</span>
                   {/if}
                 </div>
                 <span class="circle-name team-blue">{p.player.nickname}</span>
@@ -473,7 +476,7 @@
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
                   {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">DEALER</span>
+                    <span class="dealer-badge">CARD DEALER</span>
                   {/if}
                 </div>
                 <span class="circle-name team-red">{p.player.nickname}</span>
@@ -518,7 +521,7 @@
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
                   {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">DEALER</span>
+                    <span class="dealer-badge">CARD DEALER</span>
                   {/if}
                 </div>
                 <span class="circle-name team-red">{p.player.nickname}</span>
@@ -555,7 +558,7 @@
                   {getAvatar(appState.user.avatarId).emoji}
                 </span>
                 {#if gs.dealerIndex === gs.myIndex}
-                  <span class="dealer-badge">DEALER</span>
+                  <span class="dealer-badge">CARD DEALER</span>
                 {/if}
               </div>
               <span class="circle-name team-blue">{appState.user.nickname}</span>
@@ -619,7 +622,12 @@
           <!-- Trump announcement -->
           {#if trumpAnnouncement}
             <div class="table-notify">
-              <p>{trumpAnnouncement}</p>
+              <p>
+                {trumpAnnouncement}
+                {#if trumpAnnouncementSuit}
+                  <img src={getSuitIcon(trumpAnnouncementSuit)} alt="" class="trump-announce-icon" />
+                {/if}
+              </p>
             </div>
           {/if}
 
@@ -649,6 +657,20 @@
           {#if isPlaying && (!gs.currentTrick || gs.currentTrick.length === 0)}
             <div class="table-notify">
               <p>{isMyTurn ? 'Ti igraš...' : `${gs.players[gs.currentPlayerIndex]?.nickname} na potezu...`}</p>
+            </div>
+          {/if}
+
+          <!-- Bela prompt -->
+          {#if appState.belotPrompt}
+            <div class="bela-dialog dialog-appear">
+              <div class="bela-panel panel ornate-border">
+                <h3>Želiš li zvati belu?</h3>
+                <p class="bela-info">+20 bodova</p>
+                <div class="bela-buttons">
+                  <button class="btn btn-primary" onclick={() => handleBelot(true)}>Da</button>
+                  <button class="btn pass-btn" onclick={() => handleBelot(false)}>Ne</button>
+                </div>
+              </div>
             </div>
           {/if}
 
@@ -1310,6 +1332,49 @@
     transform: translateX(-50%);
     z-index: 50;
   }
+
+  /* ---- BELA DIALOG ---- */
+  .bela-dialog {
+    position: absolute;
+    bottom: calc(18% + 80px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 55;
+  }
+  .bela-panel {
+    padding: 24px 36px;
+    text-align: center;
+    min-width: 240px;
+  }
+  .bela-panel h3 {
+    font-family: var(--font-heading);
+    color: var(--accent-bright);
+    margin-bottom: 6px;
+    font-size: 1.2rem;
+  }
+  .bela-info {
+    color: var(--neon-green);
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .bela-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .bela-buttons .btn {
+    min-width: 80px;
+  }
+
+  /* ---- TRUMP ANNOUNCEMENT ICON ---- */
+  .trump-announce-icon {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+    margin-left: 6px;
+    filter: drop-shadow(0 0 4px rgba(201,168,76,0.4));
+  }
   .declaring-panel {
     padding: 28px 40px;
     text-align: center;
@@ -1416,6 +1481,22 @@
   .bubble-bottom.bubble-type-zvanja-show::after { border-color: #e8d48b transparent transparent transparent !important; }
   .bubble-right.bubble-type-zvanja-show::after { border-color: transparent #e8d48b transparent transparent !important; }
   .bubble-left.bubble-type-zvanja-show::after { border-color: transparent transparent transparent #e8d48b !important; }
+
+  /* Belot — green, celebratory */
+  .bubble-type-belot {
+    border-color: #00b894;
+    background: linear-gradient(135deg, rgba(0,60,45,0.95), rgba(0,35,25,0.95));
+    box-shadow: 0 0 20px rgba(0,184,148,0.35), 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .bubble-type-belot .bubble-text {
+    color: #00b894;
+    text-shadow: 0 0 10px rgba(0,184,148,0.4);
+  }
+  .bubble-below.bubble-type-belot::after { border-color: transparent transparent #00b894 transparent !important; }
+  .bubble-bottom.bubble-type-belot::after { border-color: #00b894 transparent transparent transparent !important; }
+  .bubble-right.bubble-type-belot::after { border-color: transparent #00b894 transparent transparent !important; }
+  .bubble-left.bubble-type-belot::after { border-color: transparent transparent transparent #00b894 !important; }
+
   .bubble-text {
     font-family: var(--font-heading);
     font-size: 1.26rem;

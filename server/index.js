@@ -11,6 +11,8 @@ import {
   processPlay,
   finishRound,
   startPlaying,
+  getTeam,
+  checkBelot,
   SUIT_NAMES,
 } from "./gameLogic.js";
 import { getNextBotName, botBid, botPlay } from "./bot.js";
@@ -109,7 +111,7 @@ function sendGameUpdate(room) {
   }
 }
 
-function emitPlayerAction(room, playerIndex, type, text, cards) {
+function emitPlayerAction(room, playerIndex, type, text, cards, extra) {
   for (const p of room.players) {
     if (!p.isBot && p.socketId) {
       io.to(p.socketId).emit("playerAction", {
@@ -117,6 +119,7 @@ function emitPlayerAction(room, playerIndex, type, text, cards) {
         type,
         text,
         cards,
+        ...extra,
       });
     }
   }
@@ -181,7 +184,9 @@ function handleBid(room, playerIndex, suit) {
   }
 
   if (result.action === "TRUMP_DECLARED") {
-    emitPlayerAction(room, playerIndex, "bid", SUIT_NAMES[suit]);
+    emitPlayerAction(room, playerIndex, "bid", SUIT_NAMES[suit], null, {
+      suit,
+    });
     sendGameUpdate(room);
     // Start declaration phase - schedule bot if needed
     scheduleBot(room, 1500);
@@ -197,9 +202,38 @@ function handleBid(room, playerIndex, suit) {
 
 function handlePlayCard(room, playerIndex, card) {
   const game = room.game;
+  const player = room.players[playerIndex];
+
+  // Pre-check: if bela would be available for a human, prompt BEFORE playing the card
+  if (
+    !player.isBot &&
+    game.phase === "PLAYING" &&
+    game.currentPlayer === playerIndex
+  ) {
+    if (checkBelot(game.hands[playerIndex], card, game.trump)) {
+      game.pendingBelotPlay = { playerIndex, card };
+      io.to(player.socketId).emit("belotPrompt");
+      return null;
+    }
+  }
+
+  return executePlayCard(room, playerIndex, card);
+}
+
+function executePlayCard(room, playerIndex, card) {
+  const game = room.game;
   const result = processPlay(game, playerIndex, card);
 
   if (result.error) return result.error;
+
+  // Handle belot for bots (auto-accept)
+  if (result.belotAvailable) {
+    const player = room.players[playerIndex];
+    if (player && player.isBot) {
+      game.belotPoints[getTeam(playerIndex)] += 20;
+      emitPlayerAction(room, playerIndex, "belot", "Bela!");
+    }
+  }
 
   if (result.action === "NEXT_PLAY") {
     sendGameUpdate(room);
@@ -600,6 +634,37 @@ io.on("connection", (socket) => {
 
     const error = handlePlayCard(room, playerIndex, card);
     if (error) socket.emit("error", error);
+  });
+
+  socket.on("belotResponse", (accept) => {
+    const player = players.get(socket.id);
+    if (!player || !player.roomId) return;
+
+    const room = rooms.get(player.roomId);
+    if (!room || !room.game) return;
+
+    const game = room.game;
+    if (!game.pendingBelotPlay) return;
+
+    const playerIndex = room.players.findIndex((p) => p.id === socket.id);
+    if (playerIndex === -1 || game.pendingBelotPlay.playerIndex !== playerIndex)
+      return;
+
+    const pendingCard = game.pendingBelotPlay.card;
+    game.pendingBelotPlay = null;
+
+    // Apply bela points if accepted
+    if (accept) {
+      game.belotPoints[getTeam(playerIndex)] += 20;
+    }
+
+    // Now actually play the card
+    executePlayCard(room, playerIndex, pendingCard);
+
+    // Emit bela bubble after the card is on the table
+    if (accept) {
+      emitPlayerAction(room, playerIndex, "belot", "Bela!");
+    }
   });
 
   socket.on("nextRound", () => {

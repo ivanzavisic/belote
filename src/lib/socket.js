@@ -57,6 +57,10 @@ socket.on("playerAction", (data) => {
   appState.lastPlayerAction = data;
 });
 
+socket.on("belotPrompt", () => {
+  appState.belotPrompt = true;
+});
+
 socket.on("newRoundDealing", () => {
   appState.isDealing = true;
 });
@@ -115,6 +119,10 @@ export function bid(suit) {
 
 export function playCard(card) {
   socket.emit("playCard", card);
+}
+
+export function respondBelot(accept) {
+  socket.emit("belotResponse", accept);
 }
 
 export function declareZvanja(declares) {
