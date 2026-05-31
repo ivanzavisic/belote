@@ -145,6 +145,11 @@
       ? gs.players[gs.trumpCallerIndex].nickname
       : null
   );
+  let trumpCallerIsMyTeam = $derived(
+    gs && gs.trumpCallerIndex != null
+      ? (gs.trumpCallerIndex % 2 === gs.myIndex % 2)
+      : false
+  );
 
   let myZvanjaTotal = $derived(
     gs && gs.myZvanja ? gs.myZvanja.reduce((sum, z) => sum + z.points, 0) : 0
@@ -394,6 +399,9 @@
           {#if trumpSuitName}
             <div class="table-trump-indicator">
               <img src={getSuitIcon(gs.trump)} alt={trumpSuitName} class="table-trump-icon" />
+              {#if trumpCallerName}
+                <span class="trump-caller-chip" class:trump-caller-blue={trumpCallerIsMyTeam} class:trump-caller-red={!trumpCallerIsMyTeam}>{trumpCallerName}</span>
+              {/if}
             </div>
           {/if}
 
@@ -420,10 +428,10 @@
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
                   {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">D</span>
+                    <span class="dealer-badge">DEALER</span>
                   {/if}
                 </div>
-                <span class="circle-name">{p.player.nickname}</span>
+                <span class="circle-name team-blue">{p.player.nickname}</span>
               </div>
               {#if actionBubbles[2]}
                 <div class="action-bubble bubble-below animate-bubble-down bubble-type-{actionBubbles[2].type}" key={actionBubbles[2].key}>
@@ -465,10 +473,10 @@
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
                   {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">D</span>
+                    <span class="dealer-badge">DEALER</span>
                   {/if}
                 </div>
-                <span class="circle-name">{p.player.nickname}</span>
+                <span class="circle-name team-red">{p.player.nickname}</span>
               </div>
               {#if actionBubbles[3]}
                 <div class="action-bubble bubble-right animate-bubble-right bubble-type-{actionBubbles[3].type}" key={actionBubbles[3].key}>
@@ -510,10 +518,10 @@
                     {p.player.isBot ? '🤖' : getAvatar(p.player.avatarId).emoji}
                   </span>
                   {#if gs.dealerIndex === p.actualIdx}
-                    <span class="dealer-badge">D</span>
+                    <span class="dealer-badge">DEALER</span>
                   {/if}
                 </div>
-                <span class="circle-name">{p.player.nickname}</span>
+                <span class="circle-name team-red">{p.player.nickname}</span>
               </div>
               {#if actionBubbles[1]}
                 <div class="action-bubble bubble-left animate-bubble-left bubble-type-{actionBubbles[1].type}" key={actionBubbles[1].key}>
@@ -547,10 +555,10 @@
                   {getAvatar(appState.user.avatarId).emoji}
                 </span>
                 {#if gs.dealerIndex === gs.myIndex}
-                  <span class="dealer-badge">D</span>
+                  <span class="dealer-badge">DEALER</span>
                 {/if}
               </div>
-              <span class="circle-name">{appState.user.nickname}</span>
+              <span class="circle-name team-blue">{appState.user.nickname}</span>
             </div>
             {#if actionBubbles[0]}
               <div class="action-bubble bubble-bottom animate-bubble bubble-type-{actionBubbles[0].type}" key={actionBubbles[0].key}>
@@ -809,6 +817,29 @@
     object-fit: contain;
     filter: drop-shadow(0 0 6px rgba(201,168,76,0.35));
   }
+  .trump-caller-chip {
+    position: absolute;
+    bottom: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .trump-caller-blue {
+    background: rgba(37, 99, 235, 0.7);
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    color: #e0ecff;
+  }
+  .trump-caller-red {
+    background: rgba(220, 38, 38, 0.7);
+    border: 1px solid rgba(252, 129, 129, 0.4);
+    color: #ffe0e0;
+  }
 
   .scoreboard-table {
     width: 100%;
@@ -1001,8 +1032,8 @@
   }
   .timer-ring-progress {
     fill: none;
-    stroke: var(--accent-bright);
-    stroke-width: 12;
+    stroke: var(--neon-green);
+    stroke-width: 10;
     stroke-linecap: round;
     stroke-dasharray: 289.03;
     transition: stroke-dashoffset 1s linear;
@@ -1038,19 +1069,31 @@
     border: 1px solid rgba(201,168,76,0.2);
     font-weight: 500;
   }
+  .circle-name.team-blue {
+    background: rgba(37, 99, 235, 0.7);
+    border-color: rgba(96, 165, 250, 0.4);
+    color: #e0ecff;
+  }
+  .circle-name.team-red {
+    background: rgba(220, 38, 38, 0.7);
+    border-color: rgba(252, 129, 129, 0.4);
+    color: #ffe0e0;
+  }
 
   /* ---- DEALER BADGE ---- */
   .dealer-badge {
     position: absolute;
-    bottom: -5px;
-    right: -5px;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
+    bottom: -8px;
+    right: 50%;
+    transform: translateX(50%);
+    padding: 3px 10px;
+    border-radius: 10px;
     background: linear-gradient(135deg, var(--accent-bright), var(--accent));
-    color: #fff;
-    font-weight: 800;
-    font-size: 0.72rem;
+    color: var(--bg-darkest);
+    font-weight: 900;
+    font-size: 0.55rem;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1194,7 +1237,7 @@
   .bidding-panel h3 {
     font-family: var(--font-heading);
     color: var(--accent-bright);
-    margin-bottom: px;
+    margin-bottom: 12px;
     font-size: 1.05rem;
     letter-spacing: 1px;
   }
