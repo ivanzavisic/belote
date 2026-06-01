@@ -3,6 +3,7 @@
   import { joinRoom } from '../socket.js';
   import { getLeaderboard, updatePlayerNickname, getPlayerData } from '../firebase.js';
   import CreateRoomDialog from './CreateRoomDialog.svelte';
+  import Spinner from './Spinner.svelte';
 
   let showCreateDialog = $state(false);
   let leaderboard = $state([]);
@@ -158,7 +159,7 @@
         <div class="leaderboard-panel panel ornate-border">
           <h2 class="leaderboard-title">🏆 Rang Lista</h2>
           {#if loadingLeaderboard}
-            <p class="leaderboard-loading">Učitavam...</p>
+            <div class="leaderboard-loading"><Spinner size={36} /></div>
           {:else if leaderboard.length === 0}
             <p class="leaderboard-empty">Još nema rangiranih igrača</p>
           {:else}

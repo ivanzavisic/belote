@@ -6,6 +6,7 @@
   import Lobby from './lib/components/Lobby.svelte';
   import Room from './lib/components/Room.svelte';
   import Game from './lib/components/Game.svelte';
+  import Spinner from './lib/components/Spinner.svelte';
 
   let authChecked = $state(false);
 
@@ -38,7 +39,7 @@
 
   {#if !authChecked}
     <div class="auth-loading">
-      <span class="auth-spinner"></span>
+      <Spinner size={48} />
     </div>
   {:else if appState.screen === 'login'}
     <Login />
@@ -79,16 +80,5 @@
     align-items: center;
     justify-content: center;
     background: #0a0a0e;
-  }
-  .auth-spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid rgba(201,168,76,0.2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
   }
 </style>

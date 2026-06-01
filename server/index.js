@@ -23,6 +23,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = createServer(app);
 
+// Lightweight keep-alive endpoint (cheaper than re-serving the SPA on every ping)
+app.get("/health", (req, res) => {
+  res.type("text/plain").send("ok");
+});
+
 // Serve static frontend in production
 const distPath = path.join(__dirname, "../dist");
 app.use((req, res, next) => {
@@ -264,6 +269,7 @@ function executePlayCard(room, playerIndex, card) {
           game.scores[1] +=
             game.cardPointsWon[1] + game.zvanjaPoints[1] + game.belotPoints[1];
           sendGameUpdate(room);
+          if (room.isDemo) scheduleDemoRestart(room);
           return null;
         }
       }
@@ -295,6 +301,8 @@ function executePlayCard(room, playerIndex, card) {
             startNewRound(room);
           }
         }, 3000);
+      } else if (game.phase === "GAME_OVER" && room.isDemo) {
+        scheduleDemoRestart(room);
       }
     }, 800);
     return null;
@@ -956,6 +964,87 @@ function handleLeaveRoom(socket) {
   broadcastRoomList();
 }
 
+// ---------- Demo bots (self-playing games to keep the lobby lively) ----------
+
+// Realistic-looking nicknames so the lobby reads like real players (32+ for 8 tables)
+const DEMO_BOT_NAMES = [
+  "crotigar12", "slanina1998", "ivoZD", "dr_johhny", "marko_st",
+  "pero99", "zeljkoo", "ana_banana", "tomislavv", "kingbela",
+  "stipe_split", "mateo1985", "domagoj_os", "filip_ri", "bruno_zg",
+  "darko_vk", "sandra87", "ivek_gradec", "antee", "robi_pula",
+  "zoki_bjelovar", "denis_si", "vladoo73", "hrvoje_ka", "frane_zd",
+  "mladen_cko", "drazen_p", "goran_va", "borna_kc", "kreso_mng",
+  "tonkica", "vinko_br", "miro_slavonac", "ozren88", "lovro_zg",
+  "bozo_mk", "dario_vg", "senad_bih", "ratko_lika", "neven_pz",
+];
+
+const DEMO_ROOM_NAMES = [
+  "Gemišt liga",
+  "Birtija na placu",
+  "Kava i bela",
+  "Penzići",
+  "Špica",
+  "Zadnji štih",
+  "Briškula? Ne, bela",
+  "Štemajzl ekipa",
+];
+
+function pickDemoLineup(startIdx) {
+  const lineup = [];
+  for (let i = 0; i < 4; i++) {
+    const name = DEMO_BOT_NAMES[(startIdx + i) % DEMO_BOT_NAMES.length];
+    lineup.push({
+      id: `demobot_${startIdx + i}_${Math.random().toString(36).slice(2, 6)}`,
+      socketId: null,
+      nickname: name,
+      avatarId: Math.floor(Math.random() * 8),
+      isBot: true,
+    });
+  }
+  return lineup;
+}
+
+function startDemoGame(room) {
+  if (!rooms.has(room.id)) return;
+  const dealer = Math.floor(Math.random() * 4);
+  room.game = createGameState(
+    { list: room.players, scores: [0, 0] },
+    room.settings,
+    dealer,
+  );
+  broadcastRoomList();
+  scheduleBot(room, 1500);
+}
+
+function scheduleDemoRestart(room) {
+  if (!room.isDemo || !rooms.has(room.id)) return;
+  setTimeout(() => {
+    if (!rooms.has(room.id) || !room.isDemo) return;
+    startDemoGame(room);
+  }, 6000);
+}
+
+function startDemoBots() {
+  const ROOM_COUNT = 8; // 8 tables * 4 bots = 32 bots
+  for (let r = 0; r < ROOM_COUNT; r++) {
+    const roomId = generateRoomId();
+    const room = {
+      id: roomId,
+      name: DEMO_ROOM_NAMES[r % DEMO_ROOM_NAMES.length],
+      hostId: null,
+      isDemo: true,
+      settings: { targetScore: 1001, prolaz: true },
+      players: pickDemoLineup(r * 4),
+      game: null,
+    };
+    room.hostId = room.players[0].id;
+    rooms.set(roomId, room);
+    // Stagger starts so 8 games' bot timers don't all fire on the same tick
+    setTimeout(() => startDemoGame(room), r * 750);
+  }
+  console.log(`🤖 Demo botovi pokrenuti: ${ROOM_COUNT} stolova (32 bota)`);
+}
+
 // ---------- SPA fallback ----------
 
 app.get("*", (req, res) => {
@@ -971,11 +1060,20 @@ server.listen(PORT, () => {
   // Keep-alive ping every 14 minutes to prevent Render free tier from sleeping
   const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
   if (RENDER_URL) {
+    const pingUrl = `${RENDER_URL.replace(/\/$/, "")}/health`;
     setInterval(
       () => {
-        fetch(RENDER_URL).catch(() => {});
+        fetch(pingUrl).catch(() => {});
       },
       14 * 60 * 1000,
     );
+  }
+
+  // Demo bots: keep the lobby looking alive with self-playing bot games
+  if (
+    process.env.ENABLE_DEMO_BOTS === "true" ||
+    process.env.ENABLE_DEMO_BOTS === "1"
+  ) {
+    startDemoBots();
   }
 });
