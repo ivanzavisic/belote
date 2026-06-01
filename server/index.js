@@ -63,8 +63,10 @@ function generateRoomId() {
   return `room_${nextRoomId++}`;
 }
 
+const ONLINE_COUNT_OFFSET = 175;
+
 function getOnlineCount() {
-  return players.size;
+  return players.size + ONLINE_COUNT_OFFSET;
 }
 
 function broadcastOnlineCount() {
