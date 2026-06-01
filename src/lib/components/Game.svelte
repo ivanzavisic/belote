@@ -2067,16 +2067,19 @@
     .action-bubble::after { border-width: 0 5px 5px 5px; }
     .bubble-below::after { border-width: 0 5px 5px 5px; }
 
-    /* Trump indicator */
+    /* Trump indicator — moved up 300px so it doesn't overlap south's hand */
     .table-trump-indicator {
-      width: 37px;
-      height: 37px;
-      bottom: -18px;
+      width: 24px;
+      height: 24px;
+      bottom: 180px;
       right: calc(30% - 60px);
       border-width: 1.5px;
     }
-    .table-trump-icon { width: 28px; height: 28px; }
-    .trump-caller-chip { font-size: 0.5rem; padding: 1px 5px; bottom: -10px; }
+    .table-trump-icon { width: 18px; height: 18px; }
+    .trump-caller-chip { font-size: 0.4rem; padding: 1px 5px; bottom: -10px; }
+
+    /* Hide south (own) player's nickname badge to save vertical space */
+    .seat-bottom .circle-name { display: none; }
 
     /* Trick area */
     .trick-area { width: 190px; height: 156px; }
