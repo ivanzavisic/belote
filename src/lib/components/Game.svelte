@@ -2005,7 +2005,12 @@
     .table-felt { max-width: 440px; }
 
     /* Seats */
-    .seat-bottom { bottom: -42px; }
+    /* South (own) circle: perfect at -42px on wide phones (e.g. iPhone 14
+       Pro Max ~932px). On narrower phones the table shrinks, so raise the
+       circle proportionally to viewport width to avoid overlapping the hand.
+       clamp(min=-42px, dynamic, max=30px); factor 0.34 ≈ +30px raise @844px,
+       ~+65px raise @740px (and proportionally more for smaller screens). */
+    .seat-bottom { bottom: clamp(-42px, calc(-42px + (932px - 100vw) * 0.18), 30px); }
     .seat-top {
       top: -84px;
     }
