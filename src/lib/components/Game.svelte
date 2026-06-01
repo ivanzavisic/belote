@@ -26,13 +26,33 @@
     isPortrait = isMobile && window.innerHeight > window.innerWidth;
   }
 
+  // Try to enter fullscreen on mobile landscape so the browser URL bar /
+  // tab strip no longer hides the north player and the player's own cards.
+  // Browsers require a user gesture, so this is invoked from a tap handler.
+  function tryEnterFullscreen() {
+    if (!isMobile) return;
+    if (window.innerHeight > window.innerWidth) return; // only in landscape
+    if (document.fullscreenElement) return;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (req) {
+      try {
+        const p = req.call(el, { navigationUI: 'hide' });
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      } catch (_) { /* ignore: fullscreen not allowed */ }
+    }
+  }
+
   $effect(() => {
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
+    // Enter fullscreen on the first user interaction while in landscape.
+    window.addEventListener('pointerdown', tryEnterFullscreen);
     return () => {
       window.removeEventListener('resize', checkOrientation);
       window.removeEventListener('orientationchange', checkOrientation);
+      window.removeEventListener('pointerdown', tryEnterFullscreen);
     };
   });
   let prevPhase = $state('');
@@ -862,6 +882,7 @@
 <style>
   .game-screen {
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background:
@@ -1965,6 +1986,7 @@
       width: 132px;
       padding: 6px 8px;
       max-height: calc(100vh - 16px);
+      max-height: calc(100dvh - 16px);
     }
     .score-sidebar-header { margin-bottom: 4px; padding-bottom: 4px; }
     .trump-label { font-size: 0.65rem; letter-spacing: 1.5px; }
