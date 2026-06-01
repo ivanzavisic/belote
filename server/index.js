@@ -63,10 +63,8 @@ function generateRoomId() {
   return `room_${nextRoomId++}`;
 }
 
-const ONLINE_COUNT_OFFSET = 175;
-
 function getOnlineCount() {
-  return players.size + ONLINE_COUNT_OFFSET;
+  return players.size;
 }
 
 function broadcastOnlineCount() {
@@ -348,11 +346,11 @@ function handleDeclaration(room, playerIndex, declares) {
 
   if (result.action === "SHOW_ZVANJA") {
     if (declares) {
-      const total = game.playerZvanja[playerIndex].reduce(
-        (s, z) => s + z.points,
+      const best = game.playerZvanja[playerIndex].reduce(
+        (m, z) => Math.max(m, z.points),
         0,
       );
-      emitPlayerAction(room, playerIndex, "declare", `Imam ${total}!`);
+      emitPlayerAction(room, playerIndex, "declare", `Imam ${best}!`);
     } else {
       emitPlayerAction(room, playerIndex, "pass", "Dalje!");
     }
@@ -392,11 +390,11 @@ function handleDeclaration(room, playerIndex, declares) {
 
   if (result.action === "START_PLAYING") {
     if (declares) {
-      const total = game.playerZvanja[playerIndex].reduce(
-        (s, z) => s + z.points,
+      const best = game.playerZvanja[playerIndex].reduce(
+        (m, z) => Math.max(m, z.points),
         0,
       );
-      emitPlayerAction(room, playerIndex, "declare", `Imam ${total}!`);
+      emitPlayerAction(room, playerIndex, "declare", `Imam ${best}!`);
     } else {
       emitPlayerAction(room, playerIndex, "pass", "Dalje!");
     }
@@ -407,11 +405,11 @@ function handleDeclaration(room, playerIndex, declares) {
 
   // NEXT_DECLARE
   if (declares) {
-    const total = game.playerZvanja[playerIndex].reduce(
-      (s, z) => s + z.points,
+    const best = game.playerZvanja[playerIndex].reduce(
+      (m, z) => Math.max(m, z.points),
       0,
     );
-    emitPlayerAction(room, playerIndex, "declare", `Imam ${total}!`);
+    emitPlayerAction(room, playerIndex, "declare", `Imam ${best}!`);
   } else {
     emitPlayerAction(room, playerIndex, "pass", "Dalje!");
   }
@@ -970,24 +968,57 @@ function handleLeaveRoom(socket) {
 
 // Realistic-looking nicknames so the lobby reads like real players (32+ for 8 tables)
 const DEMO_BOT_NAMES = [
-  "crotigar12", "slanina1998", "ivoZD", "dr_johhny", "markoST",
-  "pero99", "zeljkoo", "ana", "tomislavvvv", "kingbela",
-  "barcelona", "dinamoZG", "domagoj_os", "filipR", "snoopDog",
-  "Šaptač", "sandra87", "ivek_gradec", "antee", "MrRobi",
-  "zoki_bjelovar", "denis_si", "vladoo73", "hrks", "FranexXx",
-  "mladen_cko", "forger", "borac123", "borna_kc",
-  "tonkica", "vinko_br", "miro_slavonac", "ozren88", "lovro1981",
-  "kohorta", "jug2osijek", "senad_bih", "rakabaka", "neven_pz", "robi", "kumerle", "bbb", "udimljenko", "stravar"];
+  "crotigar12",
+  "slanina1998",
+  "ivoZD",
+  "dr_johhny",
+  "marko_st",
+  "pero99",
+  "zeljkoo",
+  "ana_banana",
+  "tomislavv",
+  "kingbela",
+  "stipe_split",
+  "mateo1985",
+  "domagoj_os",
+  "filip_ri",
+  "bruno_zg",
+  "darko_vk",
+  "sandra87",
+  "ivek_gradec",
+  "antee",
+  "robi_pula",
+  "zoki_bjelovar",
+  "denis_si",
+  "vladoo73",
+  "hrvoje_ka",
+  "frane_zd",
+  "mladen_cko",
+  "drazen_p",
+  "goran_va",
+  "borna_kc",
+  "kreso_mng",
+  "tonkica",
+  "vinko_br",
+  "miro_slavonac",
+  "ozren88",
+  "lovro_zg",
+  "bozo_mk",
+  "dario_vg",
+  "senad_bih",
+  "ratko_lika",
+  "neven_pz",
+];
 
 const DEMO_ROOM_NAMES = [
-  "Soba od crotigar12",
-  "Soba od slanina1998",
-  "Soba od ivoZD",
-  "Soba od dr_johhny",
-  "Soba od markoST",
-  "Soba od barcelona",
-  "Soba od antee",
-  "Soba od denis_si",
+  "Gemišt liga",
+  "Birtija na placu",
+  "Kava i bela",
+  "Penzići",
+  "Špica",
+  "Zadnji štih",
+  "Briškula? Ne, bela",
+  "Štemajzl ekipa",
 ];
 
 function pickDemoLineup(startIdx) {

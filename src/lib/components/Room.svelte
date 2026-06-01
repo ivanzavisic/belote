@@ -392,56 +392,163 @@
 
   @media (max-width: 600px) {
     .room-header {
-      padding: 10px 12px;
+      padding: 8px 10px;
+      gap: 8px;
     }
-    .room-name-display {
-      font-size: 1rem;
-      letter-spacing: 1px;
+    .room-name {
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+    }
+    .room-title-section {
+      flex: 1;
+      min-width: 0;
     }
     .room-settings-info {
       flex-wrap: wrap;
       gap: 4px;
     }
+    .room-player-count {
+      font-size: 0.75rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
     .room-main {
-      padding: 12px;
+      padding: 24px 16px;
+      justify-content: center;
+      gap: 8px;
     }
     .table-layout {
       max-width: 100%;
     }
     .table-felt {
-      aspect-ratio: 1.8 / 1;
+      aspect-ratio: 1.25 / 1;
+      border-radius: 32%;
     }
     .table-logo {
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       letter-spacing: 4px;
     }
     .table-sub {
       font-size: 0.7rem;
+      margin-top: 4px;
     }
     .seat {
       width: 90px;
     }
     .player-circle {
-      width: 52px;
-      height: 52px;
+      width: 56px;
+      height: 56px;
     }
     .circle-avatar {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
     }
     .circle-name {
-      font-size: 0.6rem;
-      padding: 1px 6px;
+      font-size: 0.62rem;
+      padding: 2px 8px;
     }
-    .seat-bottom { bottom: -20px; }
-    .seat-top { top: -20px; }
-    .seat-left { left: -20px; }
-    .seat-right { right: -20px; }
+    .player-circle-wrap {
+      gap: 4px;
+    }
+    /* Push seats further out so they don't crowd the table center */
+    .seat-bottom { bottom: -54px; }
+    .seat-top { top: -54px; }
+    .seat-left { left: -16px; }
+    .seat-right { right: -16px; }
     .host-controls {
-      margin-top: 20px;
+      margin-top: 56px;
     }
     .start-btn {
       font-size: 0.95rem;
-      padding: 14px 28px;
+      padding: 14px 32px;
+      letter-spacing: 2px;
+    }
+    .waiting-text {
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+    }
+  }
+
+  /* ============================================================
+     MOBILE LANDSCAPE — short viewport: shrink table & seats so
+     all four players and the start button fit without clipping.
+     ============================================================ */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .room-header {
+      padding: 6px 12px;
+      gap: 8px;
+    }
+    .room-name {
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+    }
+    .room-settings-info {
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .room-settings-info .badge {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+    }
+    .room-player-count {
+      font-size: 0.75rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .room-main {
+      padding: 10px 16px;
+      justify-content: center;
+      gap: 0;
+    }
+    .table-layout {
+      max-width: 520px;
+    }
+    .table-felt {
+      aspect-ratio: 2.6 / 1;
+    }
+    .table-logo {
+      font-size: 1.4rem;
+      letter-spacing: 5px;
+    }
+    .table-sub {
+      font-size: 0.65rem;
+      margin-top: 4px;
+    }
+    .seat {
+      width: 90px;
+    }
+    .player-circle {
+      width: 48px;
+      height: 48px;
+    }
+    .circle-avatar {
+      font-size: 1.2rem;
+    }
+    .circle-name {
+      font-size: 0.58rem;
+      padding: 1px 7px;
+    }
+    .team-badge {
+      font-size: 0.5rem;
+      padding: 1px 6px;
+    }
+    .player-circle-wrap {
+      gap: 3px;
+    }
+    .seat-bottom { bottom: -36px; }
+    .seat-top { top: -36px; }
+    .seat-left { left: -8px; }
+    .seat-right { right: -8px; }
+    .host-controls {
+      margin-top: 44px;
+    }
+    .start-btn {
+      font-size: 0.85rem;
+      padding: 10px 28px;
+      letter-spacing: 1.5px;
+    }
+    .waiting-text {
+      font-size: 0.8rem;
+      letter-spacing: 1px;
     }
   }
 </style>

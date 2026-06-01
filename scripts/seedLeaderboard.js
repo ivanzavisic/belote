@@ -108,7 +108,10 @@ async function seed() {
 
     // Vary skill: some grinders, some casuals, a few sharks
     const games = randInt(8, 220);
-    const winRate = Math.min(0.85, Math.max(0.2, 0.5 + (Math.random() - 0.5) * 0.6));
+    const winRate = Math.min(
+      0.85,
+      Math.max(0.2, 0.5 + (Math.random() - 0.5) * 0.6),
+    );
     const wins = Math.round(games * winRate);
     const losses = games - wins;
     const abandoned = randInt(0, Math.max(1, Math.round(games * 0.05)));

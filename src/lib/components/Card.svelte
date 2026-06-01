@@ -115,6 +115,17 @@
     border: 1px solid rgba(201,168,76,0.15);
     pointer-events: none;
   }
+  /* ---- MOBILE LANDSCAPE (phones tilted to play) ---- */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .card,
+    .card-back { width: 52px; height: 84px; }
+    .card.medium,
+    .card-back.medium { width: 46px; height: 74px; }
+    .card.small,
+    .card-back.small { width: 22px; height: 36px; }
+    .card:hover { transform: translateY(-6px); }
+  }
+
   .back-face::after {
     content: '';
     position: absolute;

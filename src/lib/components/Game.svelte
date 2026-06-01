@@ -14,8 +14,6 @@
   let selectedCards = $state([]);
   let displayedCardPoints = $state([0, 0]);
   let actionBubbles = $state({}); // { [playerIndex]: { text, cards, key } }
-  let trumpAnnouncement = $state('');
-  let trumpAnnouncementSuit = $state(null);
   let suppressDeclaring = $state(false);
   let prevTrickLen = $state(0);
 
@@ -276,6 +274,9 @@
       }
       const timer = setTimeout(() => { roundToast = ''; }, 3000);
       return () => clearTimeout(timer);
+    } else {
+      // Make sure the toast never lingers once we leave ROUND_END
+      roundToast = '';
     }
   });
 
@@ -287,7 +288,14 @@
 
     const visualPos = (action.playerIndex - gs.myIndex + 4) % 4;
     const key = Date.now() + '_' + visualPos;
-    const bubble = { text: action.text, cards: action.cards || null, key, type: action.type };
+    const isBid = action.type === 'bid';
+    const bubble = {
+      text: isBid ? `Ulazim u ${action.text}` : action.text,
+      cards: action.cards || null,
+      key,
+      type: action.type,
+      suit: isBid ? (action.suit || null) : null
+    };
     actionBubbles = { ...actionBubbles, [visualPos]: bubble };
 
     const duration = action.type === 'zvanja-show' ? 4500 : (action.type === 'declare' ? null : 2000);
@@ -299,13 +307,10 @@
       }, duration);
     }
 
-    // Trump announcement — show "{Nickname} je ušao u {suit}" and suppress declaring phase briefly
+    // Suppress declaring phase briefly after a trump is called
     if (action.type === 'bid') {
-      const callerName = gs.players[action.playerIndex]?.nickname || '?';
-      trumpAnnouncement = `${callerName} ulazi u ${action.text}`;
-      trumpAnnouncementSuit = action.suit || null;
       suppressDeclaring = true;
-      setTimeout(() => { trumpAnnouncement = ''; trumpAnnouncementSuit = null; suppressDeclaring = false; }, 2500);
+      setTimeout(() => { suppressDeclaring = false; }, 2500);
     }
 
     // Sound for bubbles
@@ -538,7 +543,7 @@
               {/if}
               {#if actionBubbles[2]}
                 <div class="action-bubble bubble-below animate-bubble-down bubble-type-{actionBubbles[2].type}" key={actionBubbles[2].key}>
-                  <span class="bubble-text">{actionBubbles[2].text}</span>
+                  <span class="bubble-text">{actionBubbles[2].text}{#if actionBubbles[2].suit}<img src={getSuitIcon(actionBubbles[2].suit)} alt="" class="bubble-suit-icon" />{/if}</span>
                   {#if actionBubbles[2].cards}
                     <div class="bubble-cards">
                       {#each actionBubbles[2].cards as z}
@@ -583,7 +588,7 @@
               </div>
               {#if actionBubbles[3]}
                 <div class="action-bubble bubble-right animate-bubble-right bubble-type-{actionBubbles[3].type}" key={actionBubbles[3].key}>
-                  <span class="bubble-text">{actionBubbles[3].text}</span>
+                  <span class="bubble-text">{actionBubbles[3].text}{#if actionBubbles[3].suit}<img src={getSuitIcon(actionBubbles[3].suit)} alt="" class="bubble-suit-icon" />{/if}</span>
                   {#if actionBubbles[3].cards}
                     <div class="bubble-cards">
                       {#each actionBubbles[3].cards as z}
@@ -628,7 +633,7 @@
               </div>
               {#if actionBubbles[1]}
                 <div class="action-bubble bubble-left animate-bubble-left bubble-type-{actionBubbles[1].type}" key={actionBubbles[1].key}>
-                  <span class="bubble-text">{actionBubbles[1].text}</span>
+                  <span class="bubble-text">{actionBubbles[1].text}{#if actionBubbles[1].suit}<img src={getSuitIcon(actionBubbles[1].suit)} alt="" class="bubble-suit-icon" />{/if}</span>
                   {#if actionBubbles[1].cards}
                     <div class="bubble-cards">
                       {#each actionBubbles[1].cards as z}
@@ -665,7 +670,7 @@
             {/if}
             {#if actionBubbles[0]}
               <div class="action-bubble bubble-bottom animate-bubble bubble-type-{actionBubbles[0].type}" key={actionBubbles[0].key}>
-                <span class="bubble-text">{actionBubbles[0].text}</span>
+                <span class="bubble-text">{actionBubbles[0].text}{#if actionBubbles[0].suit}<img src={getSuitIcon(actionBubbles[0].suit)} alt="" class="bubble-suit-icon" />{/if}</span>
                 {#if actionBubbles[0].cards}
                   <div class="bubble-cards">
                     {#each actionBubbles[0].cards as z}
@@ -719,18 +724,6 @@
             {/if}
           {/if}
 
-          <!-- Trump announcement -->
-          {#if trumpAnnouncement}
-            <div class="table-notify">
-              <p>
-                {trumpAnnouncement}
-                {#if trumpAnnouncementSuit}
-                  <img src={getSuitIcon(trumpAnnouncementSuit)} alt="" class="trump-announce-icon" />
-                {/if}
-              </p>
-            </div>
-          {/if}
-
           <!-- Declaration phase -->
           {#if isDeclaringZvanja && !suppressDeclaring}
             {#if isMyDeclaringTurn}
@@ -739,7 +732,7 @@
                   <h3>Imaš li zvanje?</h3>
                   {#if selectedCards.length > 0}
                     <button class="btn btn-primary declare-btn" onclick={handleDeclareZvanja}>
-                      Zovi!
+                      Zovi
                     </button>
                   {:else}
                     <button class="btn pass-btn" onclick={handlePassZvanja}>Dalje</button>
@@ -941,10 +934,10 @@
   .table-trump-indicator {
     position: absolute;
     bottom: calc(6% - 50px);
-    right: calc(12% + 100px);
+    right: calc(12% + 50px);
     z-index: 25;
-    width: 82px;
-    height: 82px;
+    width: 78px;
+    height: 78px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(26,26,33,0.95), rgba(18,18,22,0.95));
     border: 2px solid rgba(201,168,76,0.4);
@@ -954,8 +947,8 @@
     box-shadow: 0 0 14px rgba(201,168,76,0.25), 0 3px 12px rgba(0,0,0,0.4);
   }
   .table-trump-icon {
-    width: 61px;
-    height: 61px;
+    width: 58px;
+    height: 58px;
     object-fit: contain;
     filter: drop-shadow(0 0 6px rgba(201,168,76,0.35));
   }
@@ -1123,6 +1116,7 @@
     z-index: 10;
   }
   .seat-bottom { bottom: -82px; left: 50%; transform: translateX(-50%); }
+  .seat-bottom .player-circle-wrap { margin-top: 5px; }
   .seat-top { top: -145px; left: 50%; transform: translateX(-50%); flex-direction: column; }
   .seat-left { left: -12%; top: 50%; transform: translateY(-50%); flex-direction: column; }
   .seat-right { right: -12%; top: 50%; transform: translateY(-50%); flex-direction: column; }
@@ -1252,22 +1246,21 @@
     left: 50%;
     transform: translateX(-50%);
     margin-top: 8px;
-    margin-left: -50px;
+    margin-left: -80px;
   }
   .dealer-chip-bottom {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 8px;
-    margin-left: -50px;
+    margin-left: 80px;
   }
   /* Left & right: place above bubble area */
   .dealer-chip-left {
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
-    margin-left: 8px;
-    margin-top: -30px;
+    margin-left: 20px;
+    margin-top: 20px;
   }
   .dealer-chip-right {
     right: 100%;
@@ -1655,6 +1648,14 @@
     text-shadow: 0 0 8px rgba(201,168,76,0.3);
     font-weight: 600;
   }
+  .bubble-suit-icon {
+    width: 1.1em;
+    height: 1.1em;
+    object-fit: contain;
+    vertical-align: -0.18em;
+    margin-left: 6px;
+    filter: drop-shadow(0 0 4px rgba(201,168,76,0.4));
+  }
   .bubble-cards {
     display: flex;
     gap: 3px;
@@ -1938,5 +1939,171 @@
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(90deg); }
     50%, 75% { transform: rotate(90deg); }
+  }
+
+  /* ============================================================
+     MOBILE LANDSCAPE — shrink everything so a full hand of cards,
+     the table and all four seats fit on a phone screen.
+     ============================================================ */
+  @media (orientation: landscape) and (max-height: 520px) {
+    /* Header */
+    .game-header-strip {
+      top: 4px;
+      left: 6px;
+      gap: 5px;
+    }
+    .game-header-strip .badge {
+      font-size: 0.55rem;
+      padding: 2px 6px;
+    }
+    .header-room-name { display: none; }
+
+    /* Score sidebar */
+    .score-sidebar {
+      top: 4px;
+      right: 4px;
+      width: 132px;
+      padding: 6px 8px;
+      max-height: calc(100vh - 16px);
+    }
+    .score-sidebar-header { margin-bottom: 4px; padding-bottom: 4px; }
+    .trump-label { font-size: 0.65rem; letter-spacing: 1.5px; }
+    .scoreboard-table th { font-size: 0.7rem; padding: 2px 5px; }
+    .team-col { min-width: 28px; }
+    .scoreboard-table td { padding: 1px 5px; font-size: 0.65rem; }
+    .round-num { font-size: 0.55rem; }
+    .total-score { font-size: 0.85rem; }
+
+    /* Main area */
+    .game-main {
+      margin-top: 30px;
+      padding: 2px 8px 0;
+    }
+    .table-area { max-width: 440px; }
+    .table-felt { max-width: 440px; }
+
+    /* Seats */
+    .seat-bottom { bottom: -42px; }
+    .seat-top {
+      top: -84px;
+    }
+    /* Keep the circle centered on the table; float the cards to its right */
+    .seat-top .seat-cards-row {
+      position: absolute;
+      left: 100%;
+      top: 14px;
+      margin-bottom: 0;
+      margin-left: 4px;
+    }
+    .seat-left { left: -7%; }
+    .seat-right { right: -7%; }
+
+    .player-circle { width: 41px; height: 41px; }
+    .circle-avatar { font-size: 0.9rem; }
+    .circle-name {
+      font-size: 0.58rem;
+      padding: 2px 7px;
+      border-radius: 7px;
+    }
+    .timer-ring-bg { stroke-width: 8; }
+    .timer-ring-progress { stroke-width: 7; }
+
+    /* Opponent cards (top/left/right seats) — smaller to free table space */
+    .seat-top :global(.card),
+    .seat-top :global(.card-back),
+    .seat-left :global(.card),
+    .seat-left :global(.card-back),
+    .seat-right :global(.card),
+    .seat-right :global(.card-back) {
+      width: 16px;
+      height: 26px;
+    }
+
+    .dealer-chip {
+      width: 22px;
+      height: 22px;
+      font-size: 0.62rem;
+      border-width: 2px;
+    }
+    .dealer-chip-top, .dealer-chip-bottom { margin-left: -38px; }
+    /* North player's dealer chip: 10px left and 10px down */
+    .dealer-chip-top { margin-top: 14px; margin-left: -48px; }
+    .dealer-chip-bottom { margin-bottom: 4px; }
+    .dealer-chip-left, .dealer-chip-right { margin-top: -16px; }
+
+    .seat-cards-row > :global(*) { margin-left: -8px; }
+
+    /* Action bubbles ("Dalje!", "Imam 20!" ...) — much smaller */
+    .action-bubble {
+      padding: 4px 9px;
+      border-radius: 7px;
+    }
+    .bubble-text { font-size: 0.62rem; letter-spacing: 0.3px; }
+    .bubble-cards { gap: 1px; margin-top: 3px; transform: scale(0.85); }
+    .bubble-below { margin-top: 5px; }
+    .bubble-bottom { margin-bottom: 5px; }
+    .action-bubble::after { border-width: 0 5px 5px 5px; }
+    .bubble-below::after { border-width: 0 5px 5px 5px; }
+
+    /* Trump indicator */
+    .table-trump-indicator {
+      width: 37px;
+      height: 37px;
+      bottom: -18px;
+      right: calc(30% - 60px);
+      border-width: 1.5px;
+    }
+    .table-trump-icon { width: 28px; height: 28px; }
+    .trump-caller-chip { font-size: 0.5rem; padding: 1px 5px; bottom: -10px; }
+
+    /* Trick area */
+    .trick-area { width: 190px; height: 156px; }
+    /* North player's played card up 15px so it doesn't overlap south's */
+    .trick-top { top: -10px; }
+
+    /* General table-center notifications ("X zove...", "Ti igraš...") */
+    .table-notify {
+      padding: 5px 14px;
+      font-size: 0.62rem;
+      border-radius: 8px;
+      border-width: 1px;
+    }
+
+    /* My hand */
+    .my-hand-area { padding: 2px 0 4px; }
+    .hand-card-wrap { margin-left: -10px; }
+    .zvanja-highlight { transform: translateY(-12px); }
+
+    /* On-table panels (bidding / declaring / notify) */
+    .bidding-panel { padding: 8px 12px; min-width: 0; }
+    .declaring-panel { padding: 8px 12px; min-width: 0; }
+    .bidding-panel h3, .declaring-panel h3 { font-size: 0.8rem; margin-bottom: 6px; }
+    .bid-options { gap: 6px; margin-bottom: 8px; }
+    .bid-icon { width: 22px; height: 22px; }
+    /* Let text dictate width, but keep the font small to save screen space */
+    .bid-btn {
+      padding: 6px 10px;
+      gap: 4px;
+      font-size: 0.55rem;
+    }
+    .pass-btn { padding: 5px 18px; font-size: 0.72rem; margin-top: 4px; }
+    /* Lower the bidding dialog 20px */
+    .bidding-area { bottom: calc(18% + 20px - 20px); }
+    /* Lower the "Imaš li zvanje?" dialog so it sits centered on the table */
+    .declaring-area { bottom: calc(18% + 80px - 50px); }
+
+    /* Round toast — move to bottom-right corner where there's free space
+       so it never covers the north player */
+    .round-toast {
+      top: auto;
+      left: auto;
+      bottom: 8px;
+      right: 8px;
+      transform: none;
+      padding: 6px 14px;
+      font-size: 0.7rem;
+      letter-spacing: 0.5px;
+      border-radius: 8px;
+    }
   }
 </style>
